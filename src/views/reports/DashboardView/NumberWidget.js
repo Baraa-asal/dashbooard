@@ -11,8 +11,7 @@ import {
   colors,
   makeStyles
 } from '@material-ui/core';
-import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
-import MoneyIcon from '@material-ui/icons/Money';
+import { Chart } from 'react-google-charts';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -32,7 +31,9 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-const Budget = ({ className, value, name, ...rest }) => {
+const NumberWidget = ({
+  className, value, name, isChart, redTo, redFrom, yellowTo, yellowFrom, min, max, unit, ...rest
+}) => {
   const classes = useStyles();
 
   return (
@@ -52,47 +53,52 @@ const Budget = ({ className, value, name, ...rest }) => {
               gutterBottom
               variant="h6"
             >
-              {name}
+              {name} ({unit || ""})
             </Typography>
+            {!isChart && (
             <Typography
               color="textPrimary"
               variant="h3"
             >
               {value}
             </Typography>
+            )}
+            {isChart && (
+            <div>
+              <Chart
+                width={250}
+                height={140}
+                chartType="Gauge"
+                loader={<div>Loading Chart</div>}
+                data={[
+                  ['Label', 'Value'],
+                  ['', parseFloat(parseFloat(value).toFixed(2))],
+                ]}
+                options={{
+                  min: min,
+                  max: max,
+                  redFrom: redFrom,
+                  redTo: redTo,
+                  yellowFrom: yellowFrom,
+                  yellowTo: yellowTo,
+                  minorTicks: 5
+                }}
+                rootProps={{ 'data-testid': '1' }}
+              />
+            </div>
+            )}
           </Grid>
-          <Grid item>
-            <Avatar className={classes.avatar}>
-              <MoneyIcon />
-            </Avatar>
-          </Grid>
+
         </Grid>
-        <Box
-          mt={2}
-          display="flex"
-          alignItems="center"
-        >
-          <ArrowDownwardIcon className={classes.differenceIcon} />
-          <Typography
-            className={classes.differenceValue}
-            variant="body2"
-          >
-            12%
-          </Typography>
-          <Typography
-            color="textSecondary"
-            variant="caption"
-          >
-            Since last month
-          </Typography>
-        </Box>
       </CardContent>
     </Card>
   );
 };
 
-Budget.propTypes = {
-  className: PropTypes.string
+NumberWidget.propTypes = {
+  className: PropTypes.string,
+  name: PropTypes.string,
+  value: PropTypes.number
 };
 
-export default Budget;
+export default NumberWidget;

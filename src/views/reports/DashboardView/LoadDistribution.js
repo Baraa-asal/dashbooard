@@ -15,29 +15,30 @@ import {
 } from '@material-ui/core';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import ArrowRightIcon from '@material-ui/icons/ArrowRight';
+import MyMap from "./MyMap";
 
 const useStyles = makeStyles(() => ({
   root: {}
 }));
 
-const Sales = ({ className, ...rest }) => {
+const LoadDistribution = ({ className, loadslist, handleLoadClicked, ...rest }) => {
   const classes = useStyles();
   const theme = useTheme();
-
+  console.log("LoadDistribution rendering");
   const data = {
     datasets: [
       {
         backgroundColor: colors.indigo[500],
-        data: [18, 5, 19, 27, 29, 19, 20],
-        label: 'This year'
+        data: [10, 13, 18, 16, 12, 15, 14],
+        label: 'This Weak'
       },
       {
         backgroundColor: colors.grey[200],
-        data: [11, 20, 12, 29, 30, 25, 13],
-        label: 'Last year'
+        data: [8, 15, 16, 19, 10, 13, 15],
+        label: 'Last Week'
       }
     ],
-    labels: ['1 Aug', '2 Aug', '3 Aug', '4 Aug', '5 Aug', '6 Aug']
+    labels: ['Load 1', 'Load 2', 'Load 3', 'Load 4', 'Load 5', 'Load 6']
   };
 
   const options = {
@@ -101,16 +102,7 @@ const Sales = ({ className, ...rest }) => {
       {...rest}
     >
       <CardHeader
-        action={(
-          <Button
-            endIcon={<ArrowDropDownIcon />}
-            size="small"
-            variant="text"
-          >
-            Last 7 days
-          </Button>
-        )}
-        title="Latest Sales"
+        title="Geo Load Distribution"
       />
       <Divider />
       <CardContent>
@@ -118,33 +110,16 @@ const Sales = ({ className, ...rest }) => {
           height={400}
           position="relative"
         >
-          <Bar
-            data={data}
-            options={options}
-          />
+          { loadslist.length > 0 && (<MyMap loadslist={loadslist} handleLoadClicked={handleLoadClicked} />)}
         </Box>
       </CardContent>
-      <Divider />
-      <Box
-        display="flex"
-        justifyContent="flex-end"
-        p={2}
-      >
-        <Button
-          color="primary"
-          endIcon={<ArrowRightIcon />}
-          size="small"
-          variant="text"
-        >
-          Overview
-        </Button>
-      </Box>
     </Card>
   );
 };
 
-Sales.propTypes = {
-  className: PropTypes.string
+LoadDistribution.propTypes = {
+  className: PropTypes.string,
+  loadslist: PropTypes.array
 };
 
-export default Sales;
+export default LoadDistribution;

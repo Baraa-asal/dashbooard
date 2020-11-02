@@ -11,11 +11,11 @@ import {
   Typography,
   colors,
   makeStyles,
-  useTheme
+  useTheme, Button
 } from '@material-ui/core';
-import LaptopMacIcon from '@material-ui/icons/LaptopMac';
-import PhoneIcon from '@material-ui/icons/Phone';
-import TabletIcon from '@material-ui/icons/Tablet';
+import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
+import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
+import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -23,25 +23,24 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-const TrafficByDevice = ({ className, ...rest }) => {
+const SystemHealth = ({ className, ...rest }) => {
   const classes = useStyles();
   const theme = useTheme();
 
   const data = {
     datasets: [
       {
-        data: [63, 15, 22],
+        data: [98, 2],
         backgroundColor: [
-          colors.indigo[500],
-          colors.red[600],
-          colors.orange[600]
+          colors.green[500],
+          colors.red[600]
         ],
         borderWidth: 8,
         borderColor: colors.common.white,
         hoverBorderColor: colors.common.white
       }
     ],
-    labels: ['Desktop', 'Tablet', 'Mobile']
+    labels: ['System is up', 'Issue Faced']
   };
 
   const options = {
@@ -68,22 +67,16 @@ const TrafficByDevice = ({ className, ...rest }) => {
 
   const devices = [
     {
-      title: 'Desktop',
-      value: 63,
-      icon: LaptopMacIcon,
-      color: colors.indigo[500]
+      title: 'Up time',
+      value: 98,
+      icon: ArrowUpwardIcon,
+      color: colors.green[500]
     },
     {
-      title: 'Tablet',
-      value: 15,
-      icon: TabletIcon,
+      title: 'Down time',
+      value: 2,
+      icon: ArrowDownwardIcon,
       color: colors.red[600]
-    },
-    {
-      title: 'Mobile',
-      value: 23,
-      icon: PhoneIcon,
-      color: colors.orange[600]
     }
   ];
 
@@ -92,7 +85,18 @@ const TrafficByDevice = ({ className, ...rest }) => {
       className={clsx(classes.root, className)}
       {...rest}
     >
-      <CardHeader title="Traffic by Device" />
+      <CardHeader
+        action={(
+          <Button
+            endIcon={<ArrowDropDownIcon />}
+            size="small"
+            variant="text"
+          >
+            Last 7 days
+          </Button>
+        )}
+        title="System Health"
+      />
       <Divider />
       <CardContent>
         <Box
@@ -142,8 +146,8 @@ const TrafficByDevice = ({ className, ...rest }) => {
   );
 };
 
-TrafficByDevice.propTypes = {
+SystemHealth.propTypes = {
   className: PropTypes.string
 };
 
-export default TrafficByDevice;
+export default SystemHealth;

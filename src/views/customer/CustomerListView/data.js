@@ -65,7 +65,7 @@ export default [
       city: 'Dallas',
       street: '75247'
     },
-    avatarUrl: '/static/images/avatars/avatar_6.png',
+    avatarUrl: '/static/images/avatars/baraa.webp',
     createdAt: 1554757200000,
     email: 'clarke.gillebert@devias.io',
     name: 'Clarke Gillebert',
@@ -79,7 +79,7 @@ export default [
       city: 'Bakerfield',
       street: '317 Angus Road'
     },
-    avatarUrl: '/static/images/avatars/avatar_1.png',
+    avatarUrl: '/static/images/avatars/baraa.webp',
     createdAt: 1554670800000,
     email: 'adam.denisov@devias.io',
     name: 'Adam Denisov',

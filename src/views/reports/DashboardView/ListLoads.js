@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import moment from 'moment';
 import { v4 as uuid } from 'uuid';
@@ -22,69 +22,6 @@ import {
 } from '@material-ui/core';
 import ArrowRightIcon from '@material-ui/icons/ArrowRight';
 
-const data = [
-  {
-    id: uuid(),
-    ref: 'CDD1049',
-    amount: 30.5,
-    customer: {
-      name: 'Ekaterina Tankova'
-    },
-    createdAt: 1555016400000,
-    status: 'pending'
-  },
-  {
-    id: uuid(),
-    ref: 'CDD1048',
-    amount: 25.1,
-    customer: {
-      name: 'Cao Yu'
-    },
-    createdAt: 1555016400000,
-    status: 'delivered'
-  },
-  {
-    id: uuid(),
-    ref: 'CDD1047',
-    amount: 10.99,
-    customer: {
-      name: 'Alexa Richardson'
-    },
-    createdAt: 1554930000000,
-    status: 'refunded'
-  },
-  {
-    id: uuid(),
-    ref: 'CDD1046',
-    amount: 96.43,
-    customer: {
-      name: 'Anje Keizer'
-    },
-    createdAt: 1554757200000,
-    status: 'pending'
-  },
-  {
-    id: uuid(),
-    ref: 'CDD1045',
-    amount: 32.54,
-    customer: {
-      name: 'Clarke Gillebert'
-    },
-    createdAt: 1554670800000,
-    status: 'delivered'
-  },
-  {
-    id: uuid(),
-    ref: 'CDD1044',
-    amount: 16.76,
-    customer: {
-      name: 'Adam Denisov'
-    },
-    createdAt: 1554670800000,
-    status: 'delivered'
-  }
-];
-
 const useStyles = makeStyles(() => ({
   root: {},
   actions: {
@@ -92,16 +29,21 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-const LatestOrders = ({ className, ...rest }) => {
+const ListLoads = ({
+  className, loads, averageVoltage, ...rest
+}) => {
   const classes = useStyles();
-  const [orders] = useState(data);
+  const [loadsList, setLoadsList] = useState([]);
+  useEffect(() => {
+    setLoadsList(loads);
+  }, [loads]);
 
   return (
     <Card
       className={clsx(classes.root, className)}
       {...rest}
     >
-      <CardHeader title="Latest Orders" />
+      <CardHeader title="Areas" />
       <Divider />
       <PerfectScrollbar>
         <Box minWidth={800}>
@@ -109,23 +51,16 @@ const LatestOrders = ({ className, ...rest }) => {
             <TableHead>
               <TableRow>
                 <TableCell>
-                  Order Ref
+                  #
                 </TableCell>
                 <TableCell>
-                  Customer
+                  Area
                 </TableCell>
                 <TableCell sortDirection="desc">
-                  <Tooltip
-                    enterDelay={300}
-                    title="Sort"
-                  >
-                    <TableSortLabel
-                      active
-                      direction="desc"
-                    >
-                      Date
-                    </TableSortLabel>
-                  </Tooltip>
+                      Consumption
+                </TableCell>
+                <TableCell sortDirection="desc">
+                      Current
                 </TableCell>
                 <TableCell>
                   Status
@@ -133,24 +68,31 @@ const LatestOrders = ({ className, ...rest }) => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {orders.map((order) => (
+              {loadsList.map((load, index) => (
                 <TableRow
                   hover
-                  key={order.id}
+                  key={`${load[0]}-${index}`}
                 >
                   <TableCell>
-                    {order.ref}
+                    {index + 1}
                   </TableCell>
                   <TableCell>
-                    {order.customer.name}
+                    {load[0]}
                   </TableCell>
                   <TableCell>
-                    {moment(order.createdAt).format('DD/MM/YYYY')}
+                    {load[4]}
+                    {' '}
+                    KW
+                  </TableCell>
+                  <TableCell>
+                    {load[3] ? Math.round(load[4] * 1000 / averageVoltage) : 0}
+                    {' '}
+                    A
                   </TableCell>
                   <TableCell>
                     <Chip
-                      color="primary"
-                      label={order.status}
+                      color={load[3] ? 'primary' : 'secondary'}
+                      label={load[3] ? 'On' : 'Off'}
                       size="small"
                     />
                   </TableCell>
@@ -178,8 +120,8 @@ const LatestOrders = ({ className, ...rest }) => {
   );
 };
 
-LatestOrders.propTypes = {
+ListLoads.propTypes = {
   className: PropTypes.string
 };
 
-export default LatestOrders;
+export default ListLoads;
