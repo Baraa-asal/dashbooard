@@ -12,12 +12,12 @@ const App = () => {
   const routing = useRoutes(routes);
 
   return (
-    // <Connector mqttProps="ws://mqtt-broker-server-baraa.herokuapp.com/">
+    <Connector mqttProps="ws://mqtt-broker-server-baraa.herokuapp.com/">
       <ThemeProvider theme={theme}>
         <GlobalStyles />
         {routing}
       </ThemeProvider>
-    // </Connector>
+    </Connector>
   );
 };
 

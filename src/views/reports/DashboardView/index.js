@@ -169,8 +169,7 @@ const Dashboard = ({ data }) => {
     </Page>
   );
 };
-export default Dashboard;
 
-/*export default subscribe({
+export default subscribe({
   topic: 'presence'
-})(Dashboard);*/
+})(Dashboard);
