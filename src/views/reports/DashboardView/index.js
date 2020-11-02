@@ -62,7 +62,7 @@ const Dashboard = ({ data }) => {
   }, [loads]);
 
   React.useEffect(() => {
-    if (data.length > 0) {
+    if (data && data.length > 0) {
       const message = data[0];
       if (message.hasOwnProperty('freq')) {
         setFreq(parseFloat(message.freq));
@@ -169,7 +169,8 @@ const Dashboard = ({ data }) => {
     </Page>
   );
 };
+export default Dashboard;
 
-export default subscribe({
+/*export default subscribe({
   topic: 'presence'
-})(Dashboard);
+})(Dashboard);*/
