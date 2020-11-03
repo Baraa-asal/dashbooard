@@ -41,6 +41,10 @@ const Dashboard = ({ data }) => {
     ['Anbta', 32.3081, 35.1186, true, 23],
     ['Balaa', 32.333167, 35.108653, true, 22],
     ['Faraoun', 32.285942, 35.022931, false, 12]]);
+  const [generators, setGenerators] = React.useState([
+    ['First Generator', 32.312924, 35.04662, true, 50],
+    ['First Generator', 32.3534804, 35.0832078, true, 30],
+    ['Third Generator', 32.43335, 35.083525, true, 26]]);
 
   const maxPower = 130;
   const handleLoadClicked = (i) => {
@@ -69,9 +73,9 @@ const Dashboard = ({ data }) => {
       }
     }
   }, [data]);
-  React.useEffect(()=>{
-    console.log("freq", freq)
-  },[freq])
+  React.useEffect(() => {
+    console.log('freq', freq);
+  }, [freq]);
   React.useEffect(() => {
     let acc = 0;
     loads.map((load) => {
@@ -154,12 +158,14 @@ const Dashboard = ({ data }) => {
             md={6}
             xl={3}
             xs={12}
-          />
+          >
+            <ListLoads loads={generators} averageVoltage={averageVoltage} />
+          </Grid>
           <Grid
             item
-            lg={8}
+            lg={6}
             md={12}
-            xl={9}
+            xl={6}
             xs={12}
           >
             <ListLoads loads={loads} averageVoltage={averageVoltage} />
