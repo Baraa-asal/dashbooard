@@ -29,21 +29,21 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-const ListLoads = ({
-  className, loads, averageVoltage, ...rest
+const ListSources = ({
+  className, sources, averageVoltage, freq, ...rest
 }) => {
   const classes = useStyles();
-  const [loadsList, setLoadsList] = useState([]);
+  const [sourcesList, setSourcesList] = useState([]);
   useEffect(() => {
-    setLoadsList(loads);
-  }, [loads]);
+    setSourcesList(sources);
+  }, [sources]);
 
   return (
     <Card
       className={clsx(classes.root, className)}
       {...rest}
     >
-      <CardHeader title="Loads" />
+      <CardHeader title="Generators" />
       <Divider />
       <PerfectScrollbar>
         <Box minWidth={800}>
@@ -51,13 +51,22 @@ const ListLoads = ({
             <TableHead>
               <TableRow>
                 <TableCell>
-                  Area
+                  Generator
                 </TableCell>
                 <TableCell sortDirection="desc">
-                      Consumption
+                  Production
                 </TableCell>
                 <TableCell sortDirection="desc">
-                      Current
+                  Current
+                </TableCell>
+                <TableCell sortDirection="desc">
+                  Voltage
+                </TableCell>
+                <TableCell sortDirection="desc">
+                  Inertia
+                </TableCell>
+                <TableCell sortDirection="desc">
+                  Frequency
                 </TableCell>
                 <TableCell>
                   Status
@@ -65,28 +74,35 @@ const ListLoads = ({
               </TableRow>
             </TableHead>
             <TableBody>
-              {loadsList.map((load, index) => (
+              {sourcesList.map((source, index) => (
                 <TableRow
                   hover
-                  key={`${load[0]}-${index}`}
+                  key={`${source[0]}-${index}`}
                 >
                   <TableCell>
-                    {load[0]}
+                    {source[0]}
                   </TableCell>
                   <TableCell>
-                    {load[4]}
+                    {source[4]}
                     {' '}
                     KW
                   </TableCell>
                   <TableCell>
-                    {load[3] ? Math.round(load[4] * 1000 / averageVoltage) : 0}
-                    {' '}
-                    A
+                    {averageVoltage} V
+                  </TableCell>
+                  <TableCell>
+                    000
+                  </TableCell>
+                  <TableCell>
+                    000
+                  </TableCell>
+                  <TableCell>
+                    {freq}
                   </TableCell>
                   <TableCell>
                     <Chip
-                      color={load[3] ? 'primary' : 'secondary'}
-                      label={load[3] ? 'On' : 'Off'}
+                      color={source[3] ? 'primary' : 'secondary'}
+                      label={source[3] ? 'On' : 'Off'}
                       size="small"
                     />
                   </TableCell>
@@ -114,8 +130,8 @@ const ListLoads = ({
   );
 };
 
-ListLoads.propTypes = {
+ListSources.propTypes = {
   className: PropTypes.string
 };
 
-export default ListLoads;
+export default ListSources;

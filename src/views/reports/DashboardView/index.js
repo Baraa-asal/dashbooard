@@ -6,6 +6,8 @@ import {
 } from '@material-ui/core';
 import { subscribe } from 'mqtt-react';
 import Page from 'src/components/Page';
+import Alert from '@material-ui/lab/Alert';
+import AlertTitle from '@material-ui/lab/AlertTitle';
 import Budget from './Budget';
 import ListLoads from './ListLoads';
 import LoadDistribution from './LoadDistribution';
@@ -15,6 +17,7 @@ import TotalProfit from './TotalProfit';
 import SystemHealth from './SystemHealth';
 import NumberWidget from './NumberWidget';
 import MyMap from './MyMap';
+import ListSources from './ListSources';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -29,6 +32,9 @@ const Dashboard = ({ data }) => {
   const initFreq = 50;
   const initAverageVoltage = 218;
   const classes = useStyles();
+  const [errorMsg, setErrorMsg] = React.useState('');
+  const [warningMsg, setWarningMsg] = React.useState('');
+  const [infoMsg, setInfoMsg] = React.useState('');
   const [totalConsumption, setTotalConsumption] = React.useState(0);
   const [totalProduced, setTotalProduced] = React.useState(100);
   const [freq, setFreq] = React.useState(initFreq);
@@ -70,6 +76,15 @@ const Dashboard = ({ data }) => {
       const message = data[0];
       if (message.hasOwnProperty('freq')) {
         setFreq(parseFloat(message.freq));
+      }
+      if (message.hasOwnProperty('errorMsg')) {
+        setErrorMsg(message.errorMsg);
+      }
+      if (message.hasOwnProperty('warningMsg')) {
+        setWarningMsg(message.warningMsg);
+      }
+      if (message.hasOwnProperty('infoMsg')) {
+        setInfoMsg(message.infoMsg);
       }
     }
   }, [data]);
@@ -134,16 +149,55 @@ const Dashboard = ({ data }) => {
           >
             <NumberWidget name="Consumed Power" value={totalConsumption} isChart unit="KW" yellowFrom={maxPower - 30} yellowTo={maxPower - 15} redFrom={maxPower - 15} redTo={maxPower} min={0} max={maxPower} />
           </Grid>
+          {
+            ((errorMsg && errorMsg.length > 0)
+              || (warningMsg && warningMsg.length > 0)
+             || (infoMsg && infoMsg.length > 0))
+            && (
+            <Grid
+              item
+              lg={12}
+              md={12}
+              xl={12}
+              xs={12}
+            >
+              {(errorMsg && errorMsg.length > 0) && (
+              <Alert onClose={() => {setErrorMsg('')}} variant={'filled'} severity="error">
+                <AlertTitle>Error</AlertTitle>
+                {errorMsg}
+              </Alert>
+              )}
+              {(warningMsg && warningMsg.length > 0) && (
+              <Alert onClose={() => {setWarningMsg('')}} severity="warning">
+                <AlertTitle>Warning</AlertTitle>
+                {warningMsg}
+              </Alert>
+              )}
+              {(infoMsg && infoMsg.length > 0) && (
+              <Alert onClose={() => {setInfoMsg('')}} severity="info">
+                <AlertTitle>Info</AlertTitle>
+                {infoMsg}
+              </Alert>
+              )}
+            </Grid>
+            )
+}
           <Grid
             item
-            lg={8}
+            lg={12}
             md={12}
-            xl={9}
+            xl={12}
             xs={12}
           >
-            {loads.length > 0 && (<LoadDistribution loadslist={loads} handleLoadClicked={handleLoadClicked} />)}
+            {loads.length > 0
+            && (
+            <LoadDistribution
+              loadslist={loads}
+              handleLoadClicked={handleLoadClicked}
+            />
+            )}
           </Grid>
-          <Grid
+          {/*          <Grid
             item
             lg={4}
             md={6}
@@ -151,15 +205,15 @@ const Dashboard = ({ data }) => {
             xs={12}
           >
             <SystemHealth />
-          </Grid>
+          </Grid> */}
           <Grid
             item
-            lg={4}
+            lg={6}
             md={6}
-            xl={3}
+            xl={6}
             xs={12}
           >
-            <ListLoads loads={generators} averageVoltage={averageVoltage} />
+            <ListSources sources={generators} averageVoltage={averageVoltage} freq={freq} />
           </Grid>
           <Grid
             item
