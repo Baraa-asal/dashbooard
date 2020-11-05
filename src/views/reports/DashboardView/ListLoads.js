@@ -21,6 +21,7 @@ import {
   makeStyles
 } from '@material-ui/core';
 import ArrowRightIcon from '@material-ui/icons/ArrowRight';
+import AntSwitch from "@material-ui/core/Switch";
 
 const useStyles = makeStyles(() => ({
   root: {},
@@ -30,7 +31,7 @@ const useStyles = makeStyles(() => ({
 }));
 
 const ListLoads = ({
-  className, loads, averageVoltage, ...rest
+  className, loads, averageVoltage, handleLoadClicked, ...rest
 }) => {
   const classes = useStyles();
   const [loadsList, setLoadsList] = useState([]);
@@ -43,7 +44,7 @@ const ListLoads = ({
       className={clsx(classes.root, className)}
       {...rest}
     >
-      <CardHeader title="Loads" />
+      <CardHeader title={`Loads (${loads.length})`}/>
       <Divider />
       <PerfectScrollbar>
         <Box minWidth={800}>
@@ -84,11 +85,7 @@ const ListLoads = ({
                     A
                   </TableCell>
                   <TableCell>
-                    <Chip
-                      color={load[3] ? 'primary' : 'secondary'}
-                      label={load[3] ? 'On' : 'Off'}
-                      size="small"
-                    />
+                    <AntSwitch checked={load[3]} name="checkedC" color="primary" onChange={() => handleLoadClicked(index)} />
                   </TableCell>
                 </TableRow>
               ))}

@@ -66,25 +66,35 @@ const Dashboard = ({ data }) => {
       }
     });
     setTotalConsumption(acc);
-    const tp = (acc <= maxPower) ? acc : maxPower;
-    setTotalProduced(tp);
-    setFreq(initFreq * tp / acc);
   }, [loads]);
 
   React.useEffect(() => {
     if (data && data.length > 0) {
       const message = data[0];
-      if (message.hasOwnProperty('freq')) {
-        setFreq(parseFloat(message.freq));
+      if (message.hasOwnProperty('systemData')) {
+        if (message.systemData.hasOwnProperty('freq')) {
+          setFreq(parseFloat(message.systemData.freq));
+        }
+        if (message.systemData.hasOwnProperty('voltage')) {
+          setAverageVoltage(parseFloat(message.systemData.voltage));
+        }
+        if (message.systemData.hasOwnProperty('producedPower')) {
+          setTotalProduced(parseFloat(message.systemData.producedPower));
+        }
       }
-      if (message.hasOwnProperty('errorMsg')) {
-        setErrorMsg(message.errorMsg);
+      if (message.hasOwnProperty('loads')) {
+        setLoads(message.loads);
       }
-      if (message.hasOwnProperty('warningMsg')) {
-        setWarningMsg(message.warningMsg);
-      }
-      if (message.hasOwnProperty('infoMsg')) {
-        setInfoMsg(message.infoMsg);
+      if (message.hasOwnProperty('alert')) {
+        if (message.alert.hasOwnProperty('errorMsg')) {
+          setErrorMsg(message.alert.errorMsg);
+        }
+        if (message.alert.hasOwnProperty('warningMsg')) {
+          setWarningMsg(message.alert.warningMsg);
+        }
+        if (message.alert.hasOwnProperty('infoMsg')) {
+          setInfoMsg(message.alert.infoMsg);
+        }
       }
     }
   }, [data]);
@@ -99,9 +109,6 @@ const Dashboard = ({ data }) => {
       }
     });
     setTotalConsumption(acc);
-    const tp = (acc <= maxPower) ? acc : maxPower;
-    setTotalProduced(tp);
-    setFreq(initFreq * tp / acc);
   }, []);
   return (
     <Page
@@ -162,19 +169,19 @@ const Dashboard = ({ data }) => {
               xs={12}
             >
               {(errorMsg && errorMsg.length > 0) && (
-              <Alert onClose={() => {setErrorMsg('')}} variant={'filled'} severity="error">
+              <Alert onClose={() => { setErrorMsg(''); }} variant="filled" severity="error">
                 <AlertTitle>Error</AlertTitle>
                 {errorMsg}
               </Alert>
               )}
               {(warningMsg && warningMsg.length > 0) && (
-              <Alert onClose={() => {setWarningMsg('')}} severity="warning">
+              <Alert onClose={() => { setWarningMsg(''); }} severity="warning">
                 <AlertTitle>Warning</AlertTitle>
                 {warningMsg}
               </Alert>
               )}
               {(infoMsg && infoMsg.length > 0) && (
-              <Alert onClose={() => {setInfoMsg('')}} severity="info">
+              <Alert onClose={() => { setInfoMsg(''); }} severity="info">
                 <AlertTitle>Info</AlertTitle>
                 {infoMsg}
               </Alert>
@@ -222,7 +229,11 @@ const Dashboard = ({ data }) => {
             xl={6}
             xs={12}
           >
-            <ListLoads loads={loads} averageVoltage={averageVoltage} />
+            <ListLoads
+              handleLoadClicked={handleLoadClicked}
+              loads={loads}
+              averageVoltage={averageVoltage}
+            />
           </Grid>
         </Grid>
       </Container>
