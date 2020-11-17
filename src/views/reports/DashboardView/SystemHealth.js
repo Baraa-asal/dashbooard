@@ -1,7 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 import PropTypes from 'prop-types';
-import { Doughnut } from 'react-chartjs-2';
+import { Chart } from 'react-google-charts';
 import {
   Box,
   Card,
@@ -26,7 +26,23 @@ const useStyles = makeStyles(() => ({
 const SystemHealth = ({ className, ...rest }) => {
   const classes = useStyles();
   const theme = useTheme();
-
+  const [chartData, setChartData] = React.useState([
+    ['Year', 'Sales', 'Expenses'],
+    ['2013', 1000, 400],
+    ['2014', 1170, 460],
+    ['2015', 660, 1120],
+    ['2016', 1030, 540],
+  ])
+  let year = 2017;
+  React.useEffect(()=>{
+    setInterval(()=>{
+      let tmpChartData = chartData;
+      tmpChartData.push([year, Math.round(1000 * Math.random()), Math.round(1000 * Math.random())]);
+      setChartData(tmpChartData)
+      year++;
+      console.log(year)
+    },10000)
+  }, [])
   const data = {
     datasets: [
       {
@@ -103,43 +119,21 @@ const SystemHealth = ({ className, ...rest }) => {
           height={300}
           position="relative"
         >
-          <Doughnut
-            data={data}
-            options={options}
+          <Chart
+            width="100%"
+            height="300px"
+            chartType="AreaChart"
+            loader={<div>Loading Chart</div>}
+            data={chartData}
+            options={{
+              title: 'Company Performance',
+              hAxis: { title: 'Year', titleTextStyle: { color: '#333' } },
+              vAxis: { minValue: 0 },
+              // For the legend to fit, we make the chart area smaller
+              chartArea: { width: '90%', height: '70%' },
+              // lineWidth: 25
+            }}
           />
-        </Box>
-        <Box
-          display="flex"
-          justifyContent="center"
-          mt={2}
-        >
-          {devices.map(({
-            color,
-            icon: Icon,
-            title,
-            value
-          }) => (
-            <Box
-              key={title}
-              p={1}
-              textAlign="center"
-            >
-              <Icon color="action" />
-              <Typography
-                color="textPrimary"
-                variant="body1"
-              >
-                {title}
-              </Typography>
-              <Typography
-                style={{ color }}
-                variant="h2"
-              >
-                {value}
-                %
-              </Typography>
-            </Box>
-          ))}
         </Box>
       </CardContent>
     </Card>

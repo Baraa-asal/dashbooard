@@ -123,18 +123,16 @@ function MyMap({ loadslist, handleLoadClicked }) {
 
                   >
                     <div style={{ ...infoDivStyle }}>
-                      <h3>{item[0]}</h3>
-                      <p>
-                        <b>Total power</b>
-                        :
+                      <h4>
+                        {item[0]}
                         {' '}
-                        {item[4]}
+                        {' ('}
+                        {(item[5] > 0) ? (item[5] * 230 / 1000).toFixed(1) : item[4]}
                         {' '}
-                        KW
-                      </p>
-                      <div>
+                        MW
+                        {') '}
                         <AntSwitch checked={item[3]} name="checkedC" color="primary" onChange={() => handleLoadClicked(index)} />
-                      </div>
+                      </h4>
                     </div>
                   </InfoWindow>
 

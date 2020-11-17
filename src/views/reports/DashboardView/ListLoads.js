@@ -75,12 +75,12 @@ const ListLoads = ({
                     {load[0]}
                   </TableCell>
                   <TableCell>
-                    {load[4]}
+                    {load[5] > 0 && load[3] ? (load[5] * 230 / 1000).toFixed(1) : load[4]}
                     {' '}
-                    KW
+                    MW
                   </TableCell>
                   <TableCell>
-                    {load[3] ? Math.round(load[4] * 1000 / averageVoltage) : 0}
+                    {load[3] ? load[5] : 0}
                     {' '}
                     A
                   </TableCell>
