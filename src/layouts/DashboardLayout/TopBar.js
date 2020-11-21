@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import React, {useEffect, useState} from 'react';
+import {Link as RouterLink, useNavigate} from 'react-router-dom';
 import clsx from 'clsx';
 import PropTypes from 'prop-types';
 import {
@@ -15,6 +15,7 @@ import MenuIcon from '@material-ui/icons/Menu';
 import NotificationsIcon from '@material-ui/icons/NotificationsOutlined';
 import InputIcon from '@material-ui/icons/Input';
 import Logo from 'src/components/Logo';
+import { auth } from '../../firebase';
 
 const useStyles = makeStyles(() => ({
   root: {},
@@ -31,7 +32,13 @@ const TopBar = ({
 }) => {
   const classes = useStyles();
   const [notifications] = useState([]);
+  const navigate = useNavigate();
 
+  useEffect(() => {
+    auth.onAuthStateChanged((userAuth) => {
+      navigate('/app/dashboard', { replace: false })
+    });
+  }, []);
   return (
     <AppBar
       className={clsx(classes.root, className)}
@@ -41,6 +48,7 @@ const TopBar = ({
       <Toolbar>
         <RouterLink to="/">
           <Logo />
+          <span style={{height:'100%',position:'relative', bottom:'20px', left:'20px',fontSize:'20px',color:"#fff"}}>Power System Control Dashboard</span>
         </RouterLink>
         <Box flexGrow={1} />
         <Hidden mdDown>
@@ -54,7 +62,7 @@ const TopBar = ({
             </Badge>
           </IconButton>
           <IconButton color="inherit">
-            <InputIcon />
+            <InputIcon variant={'button'} onClick={() => { auth.signOut(); }} />
           </IconButton>
         </Hidden>
         <Hidden lgUp>

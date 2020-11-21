@@ -244,7 +244,7 @@ const Dashboard = ({ data, mqtt }) => {
               handleLoadClicked={handleLoadClicked}
               loads={loads}
               averageVoltage={averageVoltage}
-            />
+            />  
           </Grid>
         </Grid>
       </Container>

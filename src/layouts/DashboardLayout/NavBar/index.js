@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import {
@@ -23,12 +23,7 @@ import {
   Users as UsersIcon
 } from 'react-feather';
 import NavItem from './NavItem';
-
-const user = {
-  avatar: '/static/images/avatars/baraa.webp',
-  jobTitle: 'System Engineer',
-  name: "Bara'a Abu Asal"
-};
+import { auth } from '../../../firebase';
 
 const items = [
   {
@@ -51,11 +46,7 @@ const items = [
     icon: SettingsIcon,
     title: 'Settings'
   },
-  {
-    href: '/login',
-    icon: LockIcon,
-    title: 'Logout'
-  }
+
 ];
 
 const useStyles = makeStyles(() => ({
@@ -77,6 +68,20 @@ const useStyles = makeStyles(() => ({
 const NavBar = ({ onMobileClose, openMobile }) => {
   const classes = useStyles();
   const location = useLocation();
+
+  const [user, setUser] = useState({
+    avatar: '/static/images/avatars/baraa.webp',
+    jobTitle: auth?.currentUser?.jobTitle,
+    displayName: auth?.currentUser?.displayName
+  });
+console.log(user, auth.currentUser)
+  useEffect(() => {
+    setUser({
+      avatar: '/static/images/avatars/baraa.webp',
+      jobTitle: auth?.currentUser?.jobTitle,
+      displayName: auth?.currentUser?.displayName
+    });
+  }, [auth.currentUser]);
 
   useEffect(() => {
     if (openMobile && onMobileClose) {
@@ -108,7 +113,7 @@ const NavBar = ({ onMobileClose, openMobile }) => {
           color="textPrimary"
           variant="h5"
         >
-          {user.name}
+          {user.displayName}
         </Typography>
         <Typography
           color="textSecondary"
