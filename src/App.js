@@ -22,7 +22,7 @@ const App = () => {
   }, []);
   return (
     <UserProvider>
-      <Connector mqttProps="ws://ip-160-153-252-170.ip.secureserver.net:8888">
+      <Connector mqttProps="wss://ip-160-153-252-170.ip.secureserver.net:8888">
         <ThemeProvider theme={theme}>
           <GlobalStyles />
           { isInitialized ? auth.currentUser ? routing : <LoginView /> : <CircularProgress /> }
