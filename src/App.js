@@ -22,12 +22,18 @@ const App = () => {
   }, []);
   return (
     <UserProvider>
-      <Connector mqttProps="ws://ip-160-153-252-170.ip.secureserver.net:8888">
-        <ThemeProvider theme={theme}>
-          <GlobalStyles />
-          { isInitialized ? auth.currentUser ? routing : <LoginView /> : <CircularProgress /> }
-        </ThemeProvider>
-      </Connector>
+      <ThemeProvider theme={theme}>
+        <GlobalStyles />
+        { isInitialized ? auth.currentUser ? (
+          <Connector mqttProps={{
+            host: 'ip-160-153-252-170.ip.secureserver.net', port: 8888, username: 'feUser', password: 'Y=^j*kj7X3mnurXy&UJx7qJ'
+          }}
+          >
+            {routing}
+          </Connector>
+        ) : <LoginView /> : <CircularProgress /> }
+      </ThemeProvider>
+
     </UserProvider>
   );
 };
