@@ -18,6 +18,7 @@ import SystemHealth from './SystemHealth';
 import NumberWidget from './NumberWidget';
 import MyMap from './MyMap';
 import ListSources from './ListSources';
+import ListBusses from "./ListBusses";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -48,10 +49,8 @@ const Dashboard = ({ data, mqtt }) => {
     ['Anbta', 32.3081, 35.1186, true, 23, 0],
     ['Balaa', 32.333167, 35.108653, true, 22, 0],
     ['Faraoun', 32.285942, 35.022931, false, 12, 0]]);
-  const [generators, setGenerators] = React.useState([
-    ['First Generator', 32.312924, 35.04662, true, 50],
-    ['First Generator', 32.3534804, 35.0832078, true, 30],
-    ['Third Generator', 32.43335, 35.083525, true, 26]]);
+  const [generators, setGenerators] = React.useState([]);
+  const [loadBuses, setLoadBuses] = React.useState([]);
 
   const [maxPower, setMaxPower] = useState(130);
   const handleLoadClicked = (i) => {
@@ -77,7 +76,9 @@ const Dashboard = ({ data, mqtt }) => {
       setFreq(frequency);
       // eslint-disable-next-line max-len
       const tmpGenerators = msg?.generators?.Generators?.length ? msg?.generators?.Generators[0] : [];
+      const tmpLoadBuses = msg?.LoadBusses?.length ? msg?.LoadBusses[0] : [];
       setGenerators(tmpGenerators);
+      setLoadBuses(tmpLoadBuses);
       if (tmpGenerators && tmpGenerators.length) {
         let accProducedPower = 0;
         for (let i = 0; i < tmpGenerators.length; i++) {
@@ -254,6 +255,15 @@ const Dashboard = ({ data, mqtt }) => {
             xs={12}
           >
             <ListSources sources={generators} averageVoltage={averageVoltage} freq={freq} />
+          </Grid>
+          <Grid
+            item
+            lg={12}
+            md={12}
+            xl={12}
+            xs={12}
+          >
+            <ListBusses sources={loadBuses} averageVoltage={averageVoltage} freq={freq} />
           </Grid>
           <Grid
             item
