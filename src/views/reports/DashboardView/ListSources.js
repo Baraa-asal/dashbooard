@@ -53,20 +53,14 @@ const ListSources = ({
                 <TableCell>
                   Generator
                 </TableCell>
+                <TableCell>
+                  Bus
+                </TableCell>
                 <TableCell sortDirection="desc">
                   Production
                 </TableCell>
                 <TableCell sortDirection="desc">
-                  Current
-                </TableCell>
-                <TableCell sortDirection="desc">
-                  Voltage
-                </TableCell>
-                <TableCell sortDirection="desc">
-                  Inertia
-                </TableCell>
-                <TableCell sortDirection="desc">
-                  Frequency
+                  Vbs
                 </TableCell>
                 <TableCell>
                   Status
@@ -80,29 +74,25 @@ const ListSources = ({
                   key={`${source[0]}-${index}`}
                 >
                   <TableCell>
-                    {source[0]}
+                    {`Generator ${index + 1} (G${index + 1})`}
                   </TableCell>
                   <TableCell>
-                    {source[4]}
+                    {source?.VBGnames || "none"}
+                  </TableCell>
+                  <TableCell>
+                    {(source.PowerG) ? parseFloat(source.PowerG).toFixed(2) : 0}
                     {' '}
-                    KW
+                    MW
                   </TableCell>
                   <TableCell>
-                    {averageVoltage} V
-                  </TableCell>
-                  <TableCell>
-                    000
-                  </TableCell>
-                  <TableCell>
-                    000
-                  </TableCell>
-                  <TableCell>
-                    {freq}
+                    {(source.VG) ? parseFloat(source.VG).toFixed(2) : 0}
+                    {' '}
+                    V(pu)
                   </TableCell>
                   <TableCell>
                     <Chip
-                      color={source[3] ? 'primary' : 'secondary'}
-                      label={source[3] ? 'On' : 'Off'}
+                      color={source.Gstate ? 'primary' : 'secondary'}
+                      label={source.Gstate ? 'On' : 'Off'}
                       size="small"
                     />
                   </TableCell>

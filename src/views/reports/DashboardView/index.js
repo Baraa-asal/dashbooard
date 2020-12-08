@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Container,
   Grid,
@@ -29,7 +29,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const Dashboard = ({ data, mqtt }) => {
-  const initFreq = 50;
+  const initFreq = 59;
   const initAverageVoltage = 218;
   const classes = useStyles();
   const [errorMsg, setErrorMsg] = React.useState('');
@@ -39,6 +39,7 @@ const Dashboard = ({ data, mqtt }) => {
   const [totalProduced, setTotalProduced] = React.useState(100);
   const [freq, setFreq] = React.useState(initFreq);
   const [averageVoltage, setAverageVoltage] = React.useState(initAverageVoltage);
+
   const [loads, setLoads] = React.useState([
     ['Tulkarm', 32.312924, 35.04662, true, 28, 0],
     ['Deir Ghusoon', 32.3534804, 35.0832078, true, 19, 0],
@@ -52,12 +53,12 @@ const Dashboard = ({ data, mqtt }) => {
     ['First Generator', 32.3534804, 35.0832078, true, 30],
     ['Third Generator', 32.43335, 35.083525, true, 26]]);
 
-  const maxPower = 130;
+  const [maxPower, setMaxPower] = useState(130);
   const handleLoadClicked = (i) => {
     const tmpLoads = loads;
     tmpLoads[i][3] = !tmpLoads[i][3];
     setLoads([...tmpLoads]);
-    const msg={id: tmpLoads[i][0], state: tmpLoads[i][3]};
+    const msg = { id: tmpLoads[i][0], state: tmpLoads[i][3] };
     mqtt.publish('loads-control', JSON.stringify(msg));
   };
   React.useEffect(() => {
@@ -68,28 +69,49 @@ const Dashboard = ({ data, mqtt }) => {
       }
     });
     setTotalConsumption(acc);
-    console.log("loads updated");
   }, [loads]);
-
+  mqtt.on('message', ((topic, message) => {
+    const msg = JSON.parse(message.toString());
+    if (topic === 'system-update') {
+      const frequency = parseFloat(msg?.systemState?.freq || 59);
+      setFreq(frequency);
+      // eslint-disable-next-line max-len
+      const tmpGenerators = msg?.generators?.Generators?.length ? msg?.generators?.Generators[0] : [];
+      setGenerators(tmpGenerators);
+      if (tmpGenerators && tmpGenerators.length) {
+        let accProducedPower = 0;
+        for (let i = 0; i < tmpGenerators.length; i++) {
+          accProducedPower += parseFloat(tmpGenerators[i].PowerG);
+        }
+        accProducedPower = parseFloat(accProducedPower.toFixed(2));
+        setMaxPower(accProducedPower * 1.5);
+        setTotalProduced(accProducedPower);
+      }
+    }
+  }));
   React.useEffect(() => {
+    // console.log(data);
+    for (let i = 0; i < data.length; i++) {
+      // console.log(data[i]);
+    }
     if (data && data.length > 0) {
       const message = data[0];
-      console.log(message)
+      // console.log(message, message.hasOwnProperty('id'));
       if (message.hasOwnProperty('id')) {
-          let tmpLoads = loads;
-          for (let i = 0 ; i< loads.length; i++) {
-              if (tmpLoads[i][0] === message.id) {
-                if (message.hasOwnProperty('state') && (message.state === 'true') !== tmpLoads[i][3]) {
-                  tmpLoads[i][3] = (message.state === 'true');
-                  setLoads([...tmpLoads]);
-                }
-                if (message.hasOwnProperty('current') && parseFloat(message.current) !== tmpLoads[i][5]) {
-                  tmpLoads[i][5] = parseFloat(message.current);
-                  setLoads([...tmpLoads]);
-                }
-              }
+        const tmpLoads = loads;
+        for (let i = 0; i < loads.length; i++) {
+          //   console.log(message, message.state === 'true', tmpLoads[i][0] === message.id);
+          if (tmpLoads[i][0] === message.id) {
+            if (message.hasOwnProperty('state') && (message.state === 'true') !== tmpLoads[i][3]) {
+              tmpLoads[i][3] = (message.state === 'true');
+              setLoads([...tmpLoads]);
+            }
+            if (message.hasOwnProperty('current') && parseFloat(message.current) !== tmpLoads[i][5]) {
+              tmpLoads[i][5] = parseFloat(message.current);
+              setLoads([...tmpLoads]);
+            }
           }
-
+        }
       }
       if (message.hasOwnProperty('systemData')) {
         if (message.systemData.hasOwnProperty('freq')) {
@@ -147,7 +169,7 @@ const Dashboard = ({ data, mqtt }) => {
             xl={3}
             xs={12}
           >
-            <NumberWidget name="Frequency" value={freq} isChart unit="Hz" yellowFrom={48} yellowTo={48.5} redFrom={47} redTo={48} min={47} max={54} />
+            <NumberWidget name="Frequency" value={freq} isChart unit="Hz" yellowFrom={58} yellowTo={58.5} redFrom={57} redTo={58} min={57} max={65} />
           </Grid>
           <Grid
             item
@@ -165,7 +187,7 @@ const Dashboard = ({ data, mqtt }) => {
             xl={3}
             xs={12}
           >
-            <NumberWidget name="Produced Power" value={totalProduced} isChart unit="KW" yellowFrom={maxPower - 30} yellowTo={maxPower - 15} redFrom={maxPower - 15} redTo={maxPower} min={0} max={maxPower} />
+            <NumberWidget name="Produced Power" value={totalProduced} isChart unit="MW" yellowFrom={maxPower - 30} yellowTo={maxPower - 15} redFrom={maxPower - 15} redTo={maxPower} min={0} max={maxPower} />
           </Grid>
           <Grid
             item
@@ -244,7 +266,7 @@ const Dashboard = ({ data, mqtt }) => {
               handleLoadClicked={handleLoadClicked}
               loads={loads}
               averageVoltage={averageVoltage}
-            />  
+            />
           </Grid>
         </Grid>
       </Container>
@@ -253,5 +275,5 @@ const Dashboard = ({ data, mqtt }) => {
 };
 
 export default subscribe({
-  topic: 'loads-updates'
+  topic: ['loads-updates', 'system-update']
 })(Dashboard);
