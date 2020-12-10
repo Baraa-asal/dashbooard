@@ -8,17 +8,13 @@ import { subscribe } from 'mqtt-react';
 import Page from 'src/components/Page';
 import Alert from '@material-ui/lab/Alert';
 import AlertTitle from '@material-ui/lab/AlertTitle';
-import Budget from './Budget';
+import { firestore } from '../../../firebase';
 import ListLoads from './ListLoads';
 import LoadDistribution from './LoadDistribution';
-import TasksProgress from './TasksProgress';
-import TotalCustomers from './TotalCustomers';
-import TotalProfit from './TotalProfit';
-import SystemHealth from './SystemHealth';
 import NumberWidget from './NumberWidget';
-import MyMap from './MyMap';
+
 import ListSources from './ListSources';
-import ListBusses from "./ListBusses";
+import ListBusses from './ListBusses';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -41,67 +37,80 @@ const Dashboard = ({ data, mqtt }) => {
   const [freq, setFreq] = React.useState(initFreq);
   const [averageVoltage, setAverageVoltage] = React.useState(initAverageVoltage);
 
-  const [loads, setLoads] = React.useState([
-    ['Tulkarm', 32.312924, 35.04662, true, 28, 0],
-    ['Deir Ghusoon', 32.3534804, 35.0832078, true, 19, 0],
-    ['Qufeen', 32.43335, 35.083525, true, 14, 0],
-    ['Illar', 32.370086, 35.107486, false, 18, 0],
-    ['Anbta', 32.3081, 35.1186, true, 23, 0],
-    ['Balaa', 32.333167, 35.108653, true, 22, 0],
-    ['Faraoun', 32.285942, 35.022931, false, 12, 0]]);
+  const [loads, setLoads] = React.useState({});
   const [generators, setGenerators] = React.useState([]);
   const [loadBuses, setLoadBuses] = React.useState([]);
 
   const [maxPower, setMaxPower] = useState(130);
   const handleLoadClicked = (i) => {
     const tmpLoads = loads;
-    tmpLoads[i][3] = !tmpLoads[i][3];
-    setLoads([...tmpLoads]);
-    const msg = { id: tmpLoads[i][0], state: tmpLoads[i][3] };
+    tmpLoads[i].status = !tmpLoads[i].status;
+    setLoads({ ...tmpLoads });
+    const msg = { id: i, state: tmpLoads[i].status };
     mqtt.publish('loads-control', JSON.stringify(msg));
   };
   React.useEffect(() => {
     let acc = 0;
-    loads.map((load) => {
-      if (load[3]) {
-        acc += load[4];
+    Object.keys(loads).map((load) => {
+      if (loads[load].status) {
+        acc += loads[load].nominalPower;
       }
     });
     setTotalConsumption(acc);
   }, [loads]);
   mqtt.on('message', ((topic, message) => {
     const msg = JSON.parse(message.toString());
+    console.log(topic, msg);
+    if (topic === 'loads-updates') {
+      if (msg?.id) {
+        const tmpLoads = loads;
+        tmpLoads[msg?.id].status = (msg.status === 'true');
+        setLoads(tmpLoads);
+      }
+    }
     if (topic === 'system-update') {
       const frequency = parseFloat(msg?.systemState?.freq || 59);
       setFreq(frequency);
       // eslint-disable-next-line max-len
-      const tmpGenerators = msg?.generators?.Generators?.length ? msg?.generators?.Generators[0] : [];
+      const generatorsUpdate = msg?.generators?.Generators?.length ? msg?.generators?.Generators[0] : [];
       const tmpLoadBuses = msg?.LoadBusses?.length ? msg?.LoadBusses[0] : [];
-      setGenerators(tmpGenerators);
+
       setLoadBuses(tmpLoadBuses);
-      if (tmpGenerators && tmpGenerators.length) {
+      if (generatorsUpdate && generatorsUpdate.length) {
         let accProducedPower = 0;
-        for (let i = 0; i < tmpGenerators.length; i++) {
-          accProducedPower += parseFloat(tmpGenerators[i].PowerG);
+        for (let i = 0; i < generatorsUpdate.length; i++) {
+          accProducedPower += parseFloat(generatorsUpdate[i].PowerG);
+          const filteredGenerators = generators.filter((gen) => { return gen.VBGnames == generatorsUpdate[i].VBGnames; });
+          console.log("generatorsUpdate 1", generatorsUpdate[i], generators)
+          if (filteredGenerators.length) {
+            const generator = filteredGenerators[0];
+
+            for (const [key, value] of Object.entries(generator)) {
+              if (!generatorsUpdate[i].hasOwnProperty(key)) {
+                generatorsUpdate[i][key] = value;
+              }
+            }
+          }
         }
+        console.log("generatorsUpdate", generatorsUpdate);
+        setGenerators(generatorsUpdate);
         accProducedPower = parseFloat(accProducedPower.toFixed(2));
         setMaxPower(accProducedPower * 1.5);
         setTotalProduced(accProducedPower);
       }
     }
   }));
-  React.useEffect(() => {
+  /*  React.useEffect(() => {
     // console.log(data);
     for (let i = 0; i < data.length; i++) {
       // console.log(data[i]);
     }
     if (data && data.length > 0) {
       const message = data[0];
-      // console.log(message, message.hasOwnProperty('id'));
+      console.log(message);
       if (message.hasOwnProperty('id')) {
         const tmpLoads = loads;
         for (let i = 0; i < loads.length; i++) {
-          //   console.log(message, message.state === 'true', tmpLoads[i][0] === message.id);
           if (tmpLoads[i][0] === message.id) {
             if (message.hasOwnProperty('state') && (message.state === 'true') !== tmpLoads[i][3]) {
               tmpLoads[i][3] = (message.state === 'true');
@@ -140,18 +149,50 @@ const Dashboard = ({ data, mqtt }) => {
         }
       }
     }
-  }, [data]);
+  }, [data]); */
+
   React.useEffect(() => {
-    console.log('freq', freq);
-  }, [freq]);
-  React.useEffect(() => {
-    let acc = 0;
-    loads.map((load) => {
-      if (load[3]) {
-        acc += load[4];
-      }
+    const tmpLoads = {};
+    const tmploadsBuses = [];
+    const tmpGenerators = [];
+    const loadBusesMap = { name: 'VBLnames', vbs: 'VL' };
+    const generatorsMap = {
+      name: 'name',
+      bus: 'VBGnames',
+      nominalPower: 'nominalPower',
+      producedPower: 'PowerG',
+      status: 'Gstate',
+      vbs: 'VG'
+    };
+    firestore.collection('loads').get().then((res) => {
+      res.forEach((doc) => {
+        // doc.data() is never undefined for query doc snapshots
+        tmpLoads[doc.data().code] = doc.data();
+      });
+      setLoads(tmpLoads);
     });
-    setTotalConsumption(acc);
+    firestore.collection('loadBuses').get().then((res) => {
+      res.forEach((doc) => {
+        const tmpObj = {};
+        Object.keys(doc.data()).map((key) => {
+          tmpObj[loadBusesMap[key]] = doc.data()[key];
+        });
+        tmploadsBuses.push(tmpObj);
+        // [doc.data().code] = doc.data();
+      });
+      setLoadBuses(tmploadsBuses);
+    });
+    firestore.collection('generators').get().then((res) => {
+      res.forEach((doc) => {
+        const tmpObj = {};
+        Object.keys(doc.data()).map((key) => {
+          tmpObj[generatorsMap[key]] = doc.data()[key];
+        });
+        tmpGenerators.push(tmpObj);
+        // [doc.data().code] = doc.data();
+      });
+      setGenerators(tmpGenerators);
+    });
   }, []);
   return (
     <Page
@@ -239,7 +280,7 @@ const Dashboard = ({ data, mqtt }) => {
             xl={12}
             xs={12}
           >
-            {loads.length > 0
+            {Object.keys(loads).length > 0
             && (
             <LoadDistribution
               loadslist={loads}

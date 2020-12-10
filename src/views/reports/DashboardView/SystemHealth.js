@@ -33,16 +33,6 @@ const SystemHealth = ({ className, ...rest }) => {
     ['2015', 660, 1120],
     ['2016', 1030, 540],
   ])
-  let year = 2017;
-  React.useEffect(()=>{
-    setInterval(()=>{
-      let tmpChartData = chartData;
-      tmpChartData.push([year, Math.round(1000 * Math.random()), Math.round(1000 * Math.random())]);
-      setChartData(tmpChartData)
-      year++;
-      console.log(year)
-    },10000)
-  }, [])
   const data = {
     datasets: [
       {

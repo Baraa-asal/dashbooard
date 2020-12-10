@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Container,
   Grid,
   makeStyles
 } from '@material-ui/core';
 import Page from 'src/components/Page';
+import { auth } from '../../../firebase';
 import Profile from './Profile';
 import ProfileDetails from './ProfileDetails';
 
@@ -19,11 +20,16 @@ const useStyles = makeStyles((theme) => ({
 
 const Account = () => {
   const classes = useStyles();
+  useEffect(() => {
+/*    auth.getUsers().then((results)=> {
+      console.log(results);
+    });*/
+  }, []);
 
   return (
     <Page
       className={classes.root}
-      title="Account"
+      title="Users"
     >
       <Container maxWidth="lg">
         <Grid
@@ -32,15 +38,15 @@ const Account = () => {
         >
           <Grid
             item
-            lg={4}
+            lg={8}
             md={6}
             xs={12}
           >
-            <Profile />
+            HI
           </Grid>
           <Grid
             item
-            lg={8}
+            lg={4}
             md={6}
             xs={12}
           >

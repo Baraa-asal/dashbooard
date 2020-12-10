@@ -74,7 +74,6 @@ const NavBar = ({ onMobileClose, openMobile }) => {
     jobTitle: auth?.currentUser?.jobTitle,
     displayName: auth?.currentUser?.displayName
   });
-console.log(user, auth.currentUser)
   useEffect(() => {
     setUser({
       avatar: '/static/images/avatars/baraa.webp',

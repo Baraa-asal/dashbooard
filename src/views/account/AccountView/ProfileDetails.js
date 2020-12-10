@@ -59,8 +59,7 @@ const ProfileDetails = ({ className, ...rest }) => {
     >
       <Card>
         <CardHeader
-          subheader="The information can be edited"
-          title="Profile"
+          title="Add User"
         />
         <Divider />
         <CardContent>
@@ -75,8 +74,8 @@ const ProfileDetails = ({ className, ...rest }) => {
             >
               <TextField
                 fullWidth
-                helperText="Please specify the first name"
-                label="First name"
+                helperText="Please specify th name"
+                label="Name"
                 name="firstName"
                 onChange={handleChange}
                 required

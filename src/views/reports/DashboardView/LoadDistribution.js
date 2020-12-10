@@ -41,7 +41,8 @@ const LoadDistribution = ({
         <Box
           position="relative"
         >
-          { loadslist.length > 0 && (<MyMap loadslist={loadslist} handleLoadClicked={handleLoadClicked} />)}
+          {}
+          { Object.keys(loadslist).length > 0 && (<MyMap loadslist={loadslist} handleLoadClicked={handleLoadClicked} />)}
         </Box>
       </CardContent>
     </Card>
@@ -50,7 +51,7 @@ const LoadDistribution = ({
 
 LoadDistribution.propTypes = {
   className: PropTypes.string,
-  loadslist: PropTypes.array
+  loadslist: PropTypes.object
 };
 
 export default LoadDistribution;

@@ -21,7 +21,7 @@ import {
   makeStyles
 } from '@material-ui/core';
 import ArrowRightIcon from '@material-ui/icons/ArrowRight';
-import AntSwitch from "@material-ui/core/Switch";
+import AntSwitch from '@material-ui/core/Switch';
 
 const useStyles = makeStyles(() => ({
   root: {},
@@ -44,7 +44,7 @@ const ListLoads = ({
       className={clsx(classes.root, className)}
       {...rest}
     >
-      <CardHeader title={`Loads (${loads.length})`}/>
+      <CardHeader title={`Loads (${Object.keys(loads).length})`} />
       <Divider />
       <PerfectScrollbar>
         <Box minWidth={800}>
@@ -55,10 +55,10 @@ const ListLoads = ({
                   Area
                 </TableCell>
                 <TableCell sortDirection="desc">
-                      Consumption
+                  Consumption
                 </TableCell>
                 <TableCell sortDirection="desc">
-                      Current
+                  Nominal Power Consumption
                 </TableCell>
                 <TableCell>
                   Status
@@ -66,26 +66,26 @@ const ListLoads = ({
               </TableRow>
             </TableHead>
             <TableBody>
-              {loadsList.map((load, index) => (
+              {Object.keys(loadsList).map((load, index) => (
                 <TableRow
                   hover
-                  key={`${load[0]}-${index}`}
+                  key={`${load}-${index}`}
                 >
                   <TableCell>
-                    {load[0]}
+                    {loadsList[load].name}
                   </TableCell>
                   <TableCell>
-                    {load[5] > 0 && load[3] ? (load[5] * 230 / 1000).toFixed(1) : load[4]}
+                    {loadsList[load].nominalPower}
                     {' '}
                     MW
                   </TableCell>
                   <TableCell>
-                    {load[3] ? load[5] : 0}
+                    {(parseFloat(loadsList[load].latestPowerReading) > 0) ? parseFloat(loadsList[load].latestPowerReading).toFixed(1) : loadsList[load].nominalPower}
                     {' '}
-                    A
+                    MW
                   </TableCell>
                   <TableCell>
-                    <AntSwitch checked={load[3]} name="checkedC" color="primary" onChange={() => handleLoadClicked(index)} />
+                    <AntSwitch checked={loadsList[load].status} name="checkedC" color="primary" onChange={() => handleLoadClicked(load)} />
                   </TableCell>
                 </TableRow>
               ))}

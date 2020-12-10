@@ -14,7 +14,6 @@ const UserProvider = ({ children }) => {
   const [test, setTest] = useState(null)
   useEffect(() => {
     auth.onAuthStateChanged((userAuth) => {
-      console.log('onAuthStateChanged - user provider', userAuth);
       setUser(userAuth);
       setTest(4);
     });

@@ -24,7 +24,7 @@ function MyMap({ loadslist, handleLoadClicked }) {
   const [loads, setLoads] = React.useState([]);
 
   React.useEffect(() => {
-    setLoads([...loadslist]);
+    setLoads(loadslist);
   }, [loadslist]);
 
   const getCircle = (magnitude, isOn) => {
@@ -39,7 +39,7 @@ function MyMap({ loadslist, handleLoadClicked }) {
   };
 
   const onLoad = React.useCallback((map) => {
-    console.log('Loaded', loads);
+
     map.setOptions({
       zoom: 11.5,
       center: {
@@ -91,7 +91,6 @@ function MyMap({ loadslist, handleLoadClicked }) {
   const [selected, setSelected] = React.useState({});
 
   const onSelect = (item) => {
-    console.log('item', item);
     setSelected(item);
   };
 
@@ -108,30 +107,30 @@ function MyMap({ loadslist, handleLoadClicked }) {
           onUnmount={onUnmount}
         >
           {
-            loads.map((item, index) => {
+            Object.keys(loads).map((item, index) => {
               return (
                 <Marker
-                  key={item[0]}
-                  position={{ lat: item[1], lng: item[2] }}
+                  key={loads[item].code + loads[item].name}
+                  position={{ lat: loads[item].location.latitude, lng: loads[item].location.longitude }}
                   onLoad={() => onSelect(item)}
-                  icon={(item[3]) ? '/static/images/icons/elec-on.png' : '/static/images/icons/elec-off.png'}
+                  icon={(loads[item].status) ? '/static/images/icons/elec-on.png' : '/static/images/icons/elec-off.png'}
                 >
                   <InfoWindow
-                    position={{ lat: item[1], lng: item[2] }}
+                    position={{ lat: loads[item].location.latitude, lng: loads[item].location.longitude }}
                     clickable
                     onCloseClick={() => setSelected({})}
 
                   >
                     <div style={{ ...infoDivStyle }}>
                       <h4>
-                        {item[0]}
+                        {loads[item].name}
                         {' '}
                         {' ('}
-                        {(item[5] > 0) ? (item[5] * 230 / 1000).toFixed(1) : item[4]}
+                        {(parseFloat(loads[item].latestPowerReading) > 0) ? parseFloat(loads[item].latestPowerReading).toFixed(1) : loads[item].nominalPower}
                         {' '}
                         MW
                         {') '}
-                        <AntSwitch checked={item[3]} name="checkedC" color="primary" onChange={() => handleLoadClicked(index)} />
+                        <AntSwitch checked={loads[item].status} name="checkedC" color="primary" onChange={() => handleLoadClicked(item)} />
                       </h4>
                     </div>
                   </InfoWindow>
@@ -147,7 +146,7 @@ function MyMap({ loadslist, handleLoadClicked }) {
 
   return (
     <div>
-      {loads.length > 0 && (
+      {Object.keys(loads).length > 0 && (
         <h1>{renderMap()}</h1>
       )}
     </div>
