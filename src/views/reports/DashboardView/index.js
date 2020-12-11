@@ -81,7 +81,7 @@ const Dashboard = ({ data, mqtt }) => {
         for (let i = 0; i < generatorsUpdate.length; i++) {
           accProducedPower += parseFloat(generatorsUpdate[i].PowerG);
           const filteredGenerators = generators.filter((gen) => { return gen.VBGnames == generatorsUpdate[i].VBGnames; });
-          console.log("generatorsUpdate 1", generatorsUpdate[i], generators)
+          console.log('generatorsUpdate 1', generatorsUpdate[i], generators);
           if (filteredGenerators.length) {
             const generator = filteredGenerators[0];
 
@@ -92,7 +92,7 @@ const Dashboard = ({ data, mqtt }) => {
             }
           }
         }
-        console.log("generatorsUpdate", generatorsUpdate);
+        console.log('generatorsUpdate', generatorsUpdate);
         setGenerators(generatorsUpdate);
         accProducedPower = parseFloat(accProducedPower.toFixed(2));
         setMaxPower(accProducedPower * 1.5);
@@ -181,6 +181,9 @@ const Dashboard = ({ data, mqtt }) => {
         // [doc.data().code] = doc.data();
       });
       setLoadBuses(tmploadsBuses);
+    });
+    firestore.collection('systemStatus').doc('system').get().then((res) => {
+      setFreq(res.data().freq);
     });
     firestore.collection('generators').get().then((res) => {
       res.forEach((doc) => {
