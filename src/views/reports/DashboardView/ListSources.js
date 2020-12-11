@@ -36,8 +36,8 @@ const ListSources = ({
   const [sourcesList, setSourcesList] = useState([]);
   const nominalPower = {
     'VG1': "274.5",
-    'VG2' : "128MVA",
-    'VG3': "192MVA",
+    'VG2' : "128",
+    'VG3': "192",
   };
   useEffect(() => {
     setSourcesList(sources);
@@ -79,7 +79,7 @@ const ListSources = ({
                   key={`${source[0]}-${index}`}
                 >
                   <TableCell>
-                    {`Generator ${index + 1} (${source?.nominalPower}MVA)`}
+                    { `${source?.VBGnames?.substr(1)} (${nominalPower[source?.VBGnames]}MVA)`}
                   </TableCell>
                   <TableCell>
                     {source?.VBGnames || "none"}
