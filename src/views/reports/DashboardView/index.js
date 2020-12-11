@@ -80,8 +80,8 @@ const Dashboard = ({ data, mqtt }) => {
         let accProducedPower = 0;
         for (let i = 0; i < generatorsUpdate.length; i++) {
           accProducedPower += parseFloat(generatorsUpdate[i].PowerG);
+          // eslint-disable-next-line max-len
           const filteredGenerators = generators.filter((gen) => { return gen.VBGnames == generatorsUpdate[i].VBGnames; });
-          console.log('generatorsUpdate 1', generatorsUpdate[i], generators);
           if (filteredGenerators.length) {
             const generator = filteredGenerators[0];
 
@@ -92,7 +92,7 @@ const Dashboard = ({ data, mqtt }) => {
             }
           }
         }
-        console.log('generatorsUpdate', generatorsUpdate);
+
         setGenerators(generatorsUpdate);
         accProducedPower = parseFloat(accProducedPower.toFixed(2));
         setMaxPower(accProducedPower * 1.5);
