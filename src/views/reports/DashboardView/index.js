@@ -58,99 +58,50 @@ const Dashboard = ({ data, mqtt }) => {
     });
     setTotalConsumption(acc);
   }, [loads]);
-  mqtt.on('message', ((topic, message) => {
-    const msg = JSON.parse(message.toString());
-    console.log(topic, msg);
-    if (topic === 'loads-updates') {
-      if (msg?.id) {
-        const tmpLoads = loads;
-        tmpLoads[msg?.id].status = (msg.status === 'true');
-        setLoads(tmpLoads);
+
+  const addOnMessage = () => {
+    mqtt.on('message', ((topic, message, a) => {
+      const msg = JSON.parse(message.toString());
+      if (topic === 'loads-updates') {
+        if (msg?.id) {
+          const tmpLoads = loads;
+          tmpLoads[msg?.id].status = (msg.status === 'true');
+          setLoads(tmpLoads);
+        }
       }
-    }
-    if (topic === 'system-update') {
-      const frequency = parseFloat(msg?.systemState?.freq || 59);
-      setFreq(frequency);
-      // eslint-disable-next-line max-len
-      const generatorsUpdate = msg?.generators?.Generators?.length ? msg?.generators?.Generators[0] : [];
-      const tmpLoadBuses = msg?.LoadBusses?.length ? msg?.LoadBusses[0] : [];
+      if (topic === 'system-update') {
+        const frequency = parseFloat(msg?.systemState?.freq || 59);
+        setFreq(frequency);
+        // eslint-disable-next-line max-len
+        const generatorsUpdate = msg?.generators?.Generators?.length ? msg?.generators?.Generators[0] : [];
+        const tmpLoadBuses = msg?.LoadBusses?.length ? msg?.LoadBusses[0] : [];
 
-      setLoadBuses(tmpLoadBuses);
-      if (generatorsUpdate && generatorsUpdate.length) {
-        let accProducedPower = 0;
-        for (let i = 0; i < generatorsUpdate.length; i++) {
-          accProducedPower += parseFloat(generatorsUpdate[i].PowerG);
-          // eslint-disable-next-line max-len
-          const filteredGenerators = generators.filter((gen) => { return gen.VBGnames == generatorsUpdate[i].VBGnames; });
-          if (filteredGenerators.length) {
-            const generator = filteredGenerators[0];
+        setLoadBuses(tmpLoadBuses);
+        if (generatorsUpdate && generatorsUpdate.length) {
+          let accProducedPower = 0;
+          for (let i = 0; i < generatorsUpdate.length; i++) {
+            accProducedPower += parseFloat(generatorsUpdate[i].PowerG);
+            // eslint-disable-next-line max-len
+            const filteredGenerators = generators.filter((gen) => { return gen.VBGnames == generatorsUpdate[i].VBGnames; });
+            if (filteredGenerators.length) {
+              const generator = filteredGenerators[0];
 
-            for (const [key, value] of Object.entries(generator)) {
-              if (!generatorsUpdate[i].hasOwnProperty(key)) {
-                generatorsUpdate[i][key] = value;
+              for (const [key, value] of Object.entries(generator)) {
+                if (!generatorsUpdate[i].hasOwnProperty(key)) {
+                  generatorsUpdate[i][key] = value;
+                }
               }
             }
           }
-        }
 
-        setGenerators(generatorsUpdate);
-        accProducedPower = parseFloat(accProducedPower.toFixed(2));
-        setMaxPower(accProducedPower * 1.5);
-        setTotalProduced(accProducedPower);
-      }
-    }
-  }));
-  /*  React.useEffect(() => {
-    // console.log(data);
-    for (let i = 0; i < data.length; i++) {
-      // console.log(data[i]);
-    }
-    if (data && data.length > 0) {
-      const message = data[0];
-      console.log(message);
-      if (message.hasOwnProperty('id')) {
-        const tmpLoads = loads;
-        for (let i = 0; i < loads.length; i++) {
-          if (tmpLoads[i][0] === message.id) {
-            if (message.hasOwnProperty('state') && (message.state === 'true') !== tmpLoads[i][3]) {
-              tmpLoads[i][3] = (message.state === 'true');
-              setLoads([...tmpLoads]);
-            }
-            if (message.hasOwnProperty('current') && parseFloat(message.current) !== tmpLoads[i][5]) {
-              tmpLoads[i][5] = parseFloat(message.current);
-              setLoads([...tmpLoads]);
-            }
-          }
+          setGenerators(generatorsUpdate);
+          accProducedPower = parseFloat(accProducedPower.toFixed(2));
+          setMaxPower(accProducedPower * 1.5);
+          setTotalProduced(accProducedPower);
         }
       }
-      if (message.hasOwnProperty('systemData')) {
-        if (message.systemData.hasOwnProperty('freq')) {
-          setFreq(parseFloat(message.systemData.freq));
-        }
-        if (message.systemData.hasOwnProperty('voltage')) {
-          setAverageVoltage(parseFloat(message.systemData.voltage));
-        }
-        if (message.systemData.hasOwnProperty('producedPower')) {
-          setTotalProduced(parseFloat(message.systemData.producedPower));
-        }
-      }
-      if (message.hasOwnProperty('loads')) {
-        setLoads(message.loads);
-      }
-      if (message.hasOwnProperty('alert')) {
-        if (message.alert.hasOwnProperty('errorMsg')) {
-          setErrorMsg(message.alert.errorMsg);
-        }
-        if (message.alert.hasOwnProperty('warningMsg')) {
-          setWarningMsg(message.alert.warningMsg);
-        }
-        if (message.alert.hasOwnProperty('infoMsg')) {
-          setInfoMsg(message.alert.infoMsg);
-        }
-      }
-    }
-  }, [data]); */
-
+    }));
+  };
   React.useEffect(() => {
     const tmpLoads = {};
     const tmploadsBuses = [];
@@ -164,6 +115,7 @@ const Dashboard = ({ data, mqtt }) => {
       status: 'Gstate',
       vbs: 'VG'
     };
+    addOnMessage();
     firestore.collection('loads').get().then((res) => {
       res.forEach((doc) => {
         // doc.data() is never undefined for query doc snapshots
