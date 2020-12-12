@@ -30,7 +30,7 @@ const useStyles = makeStyles(() => ({
 }));
 
 const ListBusses = ({
-  className, sources: buses, averageVoltage, freq, ...rest
+  className, buses, loads, ...rest
 }) => {
   const classes = useStyles();
   const [busesList, setBusesList] = useState([]);

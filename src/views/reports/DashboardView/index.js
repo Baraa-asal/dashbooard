@@ -49,24 +49,46 @@ const Dashboard = ({ data, mqtt }) => {
     const msg = { id: i, state: tmpLoads[i].status };
     mqtt.publish('loads-control', JSON.stringify(msg));
   };
-  React.useEffect(() => {
-    let acc = 0;
-    Object.keys(loads).map((load) => {
-      if (loads[load].status) {
-        acc += loads[load].nominalPower;
-      }
+  const mergeObjects = (target, source) => {
+    Object.keys(source).map((key) => {
+      target[key] = source[key];
     });
-    setTotalConsumption(acc);
-  }, [loads]);
-
-  const addOnMessage = () => {
-    mqtt.on('message', ((topic, message, a) => {
-      const msg = JSON.parse(message.toString());
+    return target;
+  };
+  const addOnMessage = (loads, setLoads, setLoadBuses, setGenerators, setMaxPower, setTotalProduced, setFreq) => {
+    mqtt.on('message', ((topic, message) => {
+      let msg = {};
+      try {
+        msg = JSON.parse(message.toString());
+        console.log(msg);
+      } catch (e) {
+        console.log(e);
+      }
       if (topic === 'loads-updates') {
+        console.log(loads);
         if (msg?.id) {
           const tmpLoads = loads;
-          tmpLoads[msg?.id].status = (msg.status === 'true');
-          setLoads(tmpLoads);
+          if (tmpLoads && tmpLoads[msg?.id]) {
+            tmpLoads[msg?.id].status = (msg.state == 'true');
+            setLoads({ ...tmpLoads });
+          }
+        } else {
+          const tmpLoads = loads;
+          Object.keys(msg).map((loadBus) => {
+            const busLoads = msg[loadBus][loadBus][0];
+            busLoads.map((load) => {
+              const id = load?.relaynames;
+              const loadObj = {
+                status: load?.relaystate == 'true',
+                latestPowerReading: load?.ValueLoad,
+                lastHB: new Date().getTime(),
+              };
+              if (tmpLoads[id]) {
+                tmpLoads[id] = mergeObjects(tmpLoads[id], loadObj);
+              }
+            });
+          });
+          setLoads({ ...tmpLoads });
         }
       }
       if (topic === 'system-update') {
@@ -102,6 +124,17 @@ const Dashboard = ({ data, mqtt }) => {
       }
     }));
   };
+
+  React.useEffect(() => {
+    let acc = 0;
+    Object.keys(loads).map((load) => {
+      if (loads[load].status) {
+        acc += loads[load].nominalPower;
+      }
+    });
+    setTotalConsumption(acc);
+    addOnMessage(loads, setLoads, setLoadBuses, setGenerators, setMaxPower, setTotalProduced, setFreq);
+  }, [loads]);
   React.useEffect(() => {
     const tmpLoads = {};
     const tmploadsBuses = [];
@@ -115,7 +148,6 @@ const Dashboard = ({ data, mqtt }) => {
       status: 'Gstate',
       vbs: 'VG'
     };
-    addOnMessage();
     firestore.collection('loads').get().then((res) => {
       res.forEach((doc) => {
         // doc.data() is never undefined for query doc snapshots
@@ -166,7 +198,7 @@ const Dashboard = ({ data, mqtt }) => {
             xl={3}
             xs={12}
           >
-            <NumberWidget name="Frequency" value={freq} isChart unit="Hz" yellowFrom={58} yellowTo={58.5} redFrom={57} redTo={58} min={57} max={65} />
+            <NumberWidget name="Frequency" value={parseFloat(freq)} isChart unit="Hz" yellowFrom={58} yellowTo={58.5} redFrom={57} redTo={58} min={57} max={65} />
           </Grid>
           <Grid
             item
@@ -175,7 +207,7 @@ const Dashboard = ({ data, mqtt }) => {
             xl={3}
             xs={12}
           >
-            <NumberWidget name="Average Voltage" value={averageVoltage} isChart unit="voltage" yellowFrom={240} yellowTo={270} redFrom={270} redTo={300} min={0} max={300} />
+            <NumberWidget name="Average Voltage" value={parseFloat(averageVoltage)} isChart unit="voltage" yellowFrom={240} yellowTo={270} redFrom={270} redTo={300} min={0} max={300} />
           </Grid>
           <Grid
             item
@@ -184,7 +216,7 @@ const Dashboard = ({ data, mqtt }) => {
             xl={3}
             xs={12}
           >
-            <NumberWidget name="Produced Power" value={totalProduced} isChart unit="MW" yellowFrom={maxPower - 30} yellowTo={maxPower - 15} redFrom={maxPower - 15} redTo={maxPower} min={0} max={maxPower} />
+            <NumberWidget name="Produced Power" value={parseFloat(totalProduced)} isChart unit="MW" yellowFrom={maxPower - 30} yellowTo={maxPower - 15} redFrom={maxPower - 15} redTo={maxPower} min={0} max={maxPower} />
           </Grid>
           <Grid
             item
@@ -193,7 +225,7 @@ const Dashboard = ({ data, mqtt }) => {
             xl={3}
             xs={12}
           >
-            <NumberWidget name="Consumed Power" value={totalConsumption} isChart unit="KW" yellowFrom={maxPower - 30} yellowTo={maxPower - 15} redFrom={maxPower - 15} redTo={maxPower} min={0} max={maxPower} />
+            <NumberWidget name="Consumed Power" value={parseFloat(totalConsumption)} isChart unit="KW" yellowFrom={maxPower - 30} yellowTo={maxPower - 15} redFrom={maxPower - 15} redTo={maxPower} min={0} max={maxPower} />
           </Grid>
           {
             ((errorMsg && errorMsg.length > 0)
@@ -259,7 +291,7 @@ const Dashboard = ({ data, mqtt }) => {
             xl={12}
             xs={12}
           >
-            <ListBusses sources={loadBuses} averageVoltage={averageVoltage} freq={freq} />
+            <ListBusses buses={loadBuses} freq={freq} loads={loads} />
           </Grid>
           <Grid
             item
