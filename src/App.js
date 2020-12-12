@@ -26,7 +26,7 @@ const App = () => {
         <GlobalStyles />
         { isInitialized ? auth.currentUser ? (
           <Connector mqttProps={{
-            host: 'localhost', port: 8888, username: 'feUser', password: 'Y=^j*kj7X3mnurXy&UJx7qJ'
+            host: 'ip-160-153-252-170.ip.secureserver.net', port: 8888, username: 'feUser', password: 'Y=^j*kj7X3mnurXy&UJx7qJ'
           }}
           >
             {routing}
