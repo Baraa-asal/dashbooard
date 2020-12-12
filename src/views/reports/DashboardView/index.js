@@ -64,6 +64,20 @@ const Dashboard = ({ data, mqtt }) => {
       } catch (e) {
         console.log(e);
       }
+      console.log(topic, msg);
+      if (topic === 'alerts') {
+        if (msg.hasOwnProperty('type')) {
+          if (msg.type === 'danger') {
+            setErrorMsg(msg.message);
+          }
+          if (msg.type === 'warning') {
+            setWarningMsg(msg.message);
+          }
+          if (msg.type === 'info') {
+            setInfoMsg(msg.message);
+          }
+        }
+      }
       if (topic === 'loads-updates') {
         console.log(loads);
         if (msg?.id) {
@@ -313,5 +327,5 @@ const Dashboard = ({ data, mqtt }) => {
 };
 
 export default subscribe({
-  topic: ['loads-updates', 'system-update']
+  topic: ['loads-updates', 'system-update', 'alerts']
 })(Dashboard);
