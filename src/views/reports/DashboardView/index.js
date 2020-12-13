@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   Container,
   Grid,
   makeStyles
 } from '@material-ui/core';
 import { subscribe } from 'mqtt-react';
+import mqtt from 'mqtt';
 import Page from 'src/components/Page';
 import Alert from '@material-ui/lab/Alert';
 import AlertTitle from '@material-ui/lab/AlertTitle';
@@ -25,7 +26,8 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-const Dashboard = ({ data, mqtt }) => {
+const Dashboard = ({ data }) => {
+  const version = 0;
   const initFreq = 59;
   const initAverageVoltage = 218;
   const classes = useStyles();
@@ -37,17 +39,32 @@ const Dashboard = ({ data, mqtt }) => {
   const [freq, setFreq] = React.useState(initFreq);
   const [averageVoltage, setAverageVoltage] = React.useState(initAverageVoltage);
 
-  const [loads, setLoads] = React.useState({});
-  const [generators, setGenerators] = React.useState([]);
-  const [loadBuses, setLoadBuses] = React.useState([]);
-
+  const [loads, _setLoads] = React.useState({});
+  const loadsRef = useRef(loads);
+  const setLoads = data => {
+    loadsRef.current = data;
+    _setLoads(data);
+  };
+  const [generators, _setGenerators] = React.useState([]);
+  const generatorsRef = useRef(generators);
+  const setGenerators = data => {
+    generatorsRef.current = data;
+    _setGenerators(data);
+  };
+  const [loadBuses, _setLoadBuses] = React.useState([]);
+  const loadBusesRef = useRef(loadBuses);
+  const setLoadBuses = data => {
+    loadBusesRef.current = data;
+    _setLoadBuses(data);
+  };
   const [maxPower, setMaxPower] = useState(130);
+  let client;
   const handleLoadClicked = (i) => {
     const tmpLoads = loads;
     tmpLoads[i].status = !tmpLoads[i].status;
     setLoads({ ...tmpLoads });
     const msg = { id: i, state: tmpLoads[i].status };
-    mqtt.publish('loads-control', JSON.stringify(msg));
+    // mqtt.publish('loads-control', JSON.stringify(msg));
   };
   const mergeObjects = (target, source) => {
     Object.keys(source).map((key) => {
@@ -55,88 +72,98 @@ const Dashboard = ({ data, mqtt }) => {
     });
     return target;
   };
-  const addOnMessage = (loads, setLoads, setLoadBuses, setGenerators, setMaxPower, setTotalProduced, setFreq) => {
-    mqtt.on('message', ((topic, message) => {
-      let msg = {};
-      try {
-        msg = JSON.parse(message.toString());
-        console.log(msg);
-      } catch (e) {
-        console.log(e);
-      }
-      console.log(topic, msg);
-      if (topic === 'alerts') {
-        if (msg.hasOwnProperty('type')) {
-          if (msg.type === 'danger') {
-            setErrorMsg(msg.message);
-          }
-          if (msg.type === 'warning') {
-            setWarningMsg(msg.message);
-          }
-          if (msg.type === 'info') {
-            setInfoMsg(msg.message);
-          }
+
+  const handleMsg = (topic, message) => {
+    let loads = loadsRef.current;
+    let generators = generatorsRef.current;
+    let loadBuses = loadBusesRef.current;
+    let msg = {};
+    try {
+      msg = JSON.parse(message.toString());
+    } catch (e) {
+      console.log(e);
+    }
+    console.log(topic, msg);
+    if (topic === 'alerts') {
+      if (msg.hasOwnProperty('type')) {
+        if (msg.type === 'danger') {
+          setErrorMsg(msg.message);
+        }
+        if (msg.type === 'warning') {
+          setWarningMsg(msg.message);
+        }
+        if (msg.type === 'info') {
+          setInfoMsg(msg.message);
         }
       }
-      if (topic === 'loads-updates') {
-        console.log(loads);
-        if (msg?.id) {
-          const tmpLoads = loads;
-          if (tmpLoads && tmpLoads[msg?.id]) {
-            tmpLoads[msg?.id].status = (msg.state == 'true');
-            setLoads({ ...tmpLoads });
-          }
-        } else {
-          const tmpLoads = loads;
-          Object.keys(msg).map((loadBus) => {
-            const busLoads = msg[loadBus][loadBus][0];
-            busLoads.map((load) => {
-              const id = load?.relaynames;
-              const loadObj = {
-                status: load?.relaystate == 'true',
-                latestPowerReading: load?.ValueLoad,
-                lastHB: new Date().getTime(),
-              };
-              if (tmpLoads[id]) {
-                tmpLoads[id] = mergeObjects(tmpLoads[id], loadObj);
-              }
-            });
+    }
+    if (topic === 'loads-updates') {
+      console.log(loads);
+      if (msg?.id) {
+        const tmpLoads = loads;
+        if (tmpLoads && tmpLoads[msg?.id]) {
+          tmpLoads[msg?.id].status = (msg.state == 'true');
+          setLoads({...tmpLoads});
+        }
+      } else {
+        const tmpLoads = loads;
+        Object.keys(msg).map((loadBus) => {
+          const busLoads = msg[loadBus][loadBus][0];
+          busLoads.map((load) => {
+            const id = load?.relaynames;
+            const loadObj = {
+              status: load?.relaystate == 'true',
+              latestPowerReading: load?.ValueLoad,
+              lastHB: new Date().getTime(),
+            };
+            if (tmpLoads[id]) {
+              tmpLoads[id] = mergeObjects(tmpLoads[id], loadObj);
+            }
           });
-          setLoads({ ...tmpLoads });
-        }
+        });
+        setLoads({...tmpLoads});
       }
-      if (topic === 'system-update') {
-        const frequency = parseFloat(msg?.systemState?.freq || 59);
-        setFreq(frequency);
-        // eslint-disable-next-line max-len
-        const generatorsUpdate = msg?.generators?.Generators?.length ? msg?.generators?.Generators[0] : [];
-        const tmpLoadBuses = msg?.LoadBusses?.length ? msg?.LoadBusses[0] : [];
+    }
+    if (topic === 'system-update') {
+      const frequency = parseFloat(msg?.systemState?.freq || 59);
+      setFreq(frequency);
+      // eslint-disable-next-line max-len
+      const generatorsUpdate = msg?.generators?.Generators?.length ? msg?.generators?.Generators[0] : [];
+      const tmpLoadBuses = msg?.LoadBusses?.length ? msg?.LoadBusses[0] : [];
 
-        setLoadBuses(tmpLoadBuses);
-        if (generatorsUpdate && generatorsUpdate.length) {
-          let accProducedPower = 0;
-          for (let i = 0; i < generatorsUpdate.length; i++) {
-            accProducedPower += parseFloat(generatorsUpdate[i].PowerG);
-            // eslint-disable-next-line max-len
-            const filteredGenerators = generators.filter((gen) => { return gen.VBGnames == generatorsUpdate[i].VBGnames; });
-            if (filteredGenerators.length) {
-              const generator = filteredGenerators[0];
+      setLoadBuses(tmpLoadBuses);
+      if (generatorsUpdate && generatorsUpdate.length) {
+        let accProducedPower = 0;
+        for (let i = 0; i < generatorsUpdate.length; i++) {
+          accProducedPower += parseFloat(generatorsUpdate[i].PowerG);
+          // eslint-disable-next-line max-len
+          const filteredGenerators = generators.filter((gen) => {
+            return gen.VBGnames == generatorsUpdate[i].VBGnames;
+          });
+          if (filteredGenerators.length) {
+            const generator = filteredGenerators[0];
 
-              for (const [key, value] of Object.entries(generator)) {
-                if (!generatorsUpdate[i].hasOwnProperty(key)) {
-                  generatorsUpdate[i][key] = value;
-                }
+            for (const [key, value] of Object.entries(generator)) {
+              if (!generatorsUpdate[i].hasOwnProperty(key)) {
+                generatorsUpdate[i][key] = value;
               }
             }
           }
-
-          setGenerators(generatorsUpdate);
-          accProducedPower = parseFloat(accProducedPower.toFixed(2));
-          setMaxPower(accProducedPower * 1.5);
-          setTotalProduced(accProducedPower);
         }
+
+        setGenerators(generatorsUpdate);
+        accProducedPower = parseFloat(accProducedPower.toFixed(2));
+        setMaxPower(accProducedPower * 1.5);
+        setTotalProduced(accProducedPower);
       }
-    }));
+    }
+  }
+  const addOnMessage = () => {
+    if (client) {
+      client.off('message', () => {
+      });
+      client.on('message', (topic, message) => handleMsg(topic, message));
+    }
   };
 
   React.useEffect(() => {
@@ -147,7 +174,6 @@ const Dashboard = ({ data, mqtt }) => {
       }
     });
     setTotalConsumption(acc);
-    addOnMessage(loads, setLoads, setLoadBuses, setGenerators, setMaxPower, setTotalProduced, setFreq);
   }, [loads]);
   React.useEffect(() => {
     const tmpLoads = {};
@@ -194,7 +220,16 @@ const Dashboard = ({ data, mqtt }) => {
       });
       setGenerators(tmpGenerators);
     });
+    client = mqtt.connect('ws://ip-160-153-252-170.ip.secureserver.net', {
+      host: 'ip-160-153-252-170.ip.secureserver.net', port: 8888, username: 'feUser', password: 'Y=^j*kj7X3mnurXy&UJx7qJ'
+    });
+    client.on('connect', () => {
+      console.log('connected');
+    });
+    client.subscribe(['loads-updates', 'system-update', 'alerts']);
+    addOnMessage();
   }, []);
+
   return (
     <Page
       className={classes.root}
@@ -327,5 +362,5 @@ const Dashboard = ({ data, mqtt }) => {
 };
 
 export default subscribe({
-  topic: ['loads-updates', 'system-update', 'alerts']
+  topic: [],
 })(Dashboard);
