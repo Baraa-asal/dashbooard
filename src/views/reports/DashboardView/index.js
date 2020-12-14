@@ -37,6 +37,7 @@ const Dashboard = ({ data }) => {
   const [totalConsumption, setTotalConsumption] = React.useState(0);
   const [totalProduced, setTotalProduced] = React.useState(100);
   const [freq, setFreq] = React.useState(initFreq);
+  const [mqttClient, setMqttClient] = React.useState(initFreq);
   const [averageVoltage, setAverageVoltage] = React.useState(initAverageVoltage);
 
   const [loads, _setLoads] = React.useState({});
@@ -57,14 +58,16 @@ const Dashboard = ({ data }) => {
     loadBusesRef.current = data;
     _setLoadBuses(data);
   };
+
   const [maxPower, setMaxPower] = useState(130);
-  let client;
+  var client;
+
   const handleLoadClicked = (i) => {
     const tmpLoads = loads;
     tmpLoads[i].status = !tmpLoads[i].status;
     setLoads({ ...tmpLoads });
     const msg = { id: i, state: tmpLoads[i].status };
-    // mqtt.publish('loads-control', JSON.stringify(msg));
+    mqttClient.publish('loads-control', JSON.stringify(msg));
   };
   const mergeObjects = (target, source) => {
     Object.keys(source).map((key) => {
@@ -224,6 +227,7 @@ const Dashboard = ({ data }) => {
       host: 'ip-160-153-252-170.ip.secureserver.net', port: 8888, username: 'feUser', password: 'Y=^j*kj7X3mnurXy&UJx7qJ'
     });
     client.on('connect', () => {
+      setMqttClient(client);
       console.log('connected');
     });
     client.subscribe(['loads-updates', 'system-update', 'alerts']);
