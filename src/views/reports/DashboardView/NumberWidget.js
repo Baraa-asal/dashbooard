@@ -72,7 +72,7 @@ const NumberWidget = ({
                 loader={<div>Loading Chart</div>}
                 data={[
                   ['Label', 'Value'],
-                  ['', parseFloat(parseFloat(value).toFixed(2))],
+                  ['', parseFloat(parseFloat(value))],
                 ]}
                 options={{
                   min: min,

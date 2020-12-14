@@ -128,7 +128,7 @@ const Dashboard = ({ data }) => {
       }
     }
     if (topic === 'system-update') {
-      const frequency = parseFloat(msg?.systemState?.freq || 59);
+      const frequency = parseFloat(msg?.systemState?.freq.trim() || 59);
       setFreq(frequency);
       // eslint-disable-next-line max-len
       const generatorsUpdate = msg?.generators?.Generators?.length ? msg?.generators?.Generators[0] : [];
