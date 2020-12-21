@@ -194,7 +194,9 @@ const Dashboard = ({ data }) => {
     firestore.collection('loads').get().then((res) => {
       res.forEach((doc) => {
         // doc.data() is never undefined for query doc snapshots
-        tmpLoads[doc.data().code] = doc.data();
+        if (doc.data().code) {
+          tmpLoads[doc.data().code] = doc.data();
+        }
       });
       setLoads(tmpLoads);
     });
