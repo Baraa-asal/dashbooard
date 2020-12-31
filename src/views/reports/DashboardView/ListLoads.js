@@ -52,13 +52,13 @@ const ListLoads = ({
             <TableHead>
               <TableRow>
                 <TableCell>
-                  Area
-                </TableCell>
-                <TableCell sortDirection="desc">
-                  Consumption
+                  Load
                 </TableCell>
                 <TableCell sortDirection="desc">
                   Nominal Power Consumption
+                </TableCell>
+                <TableCell sortDirection="desc">
+                  Consumption
                 </TableCell>
                 <TableCell>
                   Status
