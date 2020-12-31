@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Container,
   Grid,
@@ -42,25 +42,25 @@ const Dashboard = ({ data }) => {
 
   const [loads, _setLoads] = React.useState({});
   const loadsRef = useRef(loads);
-  const setLoads = data => {
+  const setLoads = (data) => {
     loadsRef.current = data;
     _setLoads(data);
   };
   const [generators, _setGenerators] = React.useState([]);
   const generatorsRef = useRef(generators);
-  const setGenerators = data => {
+  const setGenerators = (data) => {
     generatorsRef.current = data;
     _setGenerators(data);
   };
   const [loadBuses, _setLoadBuses] = React.useState([]);
   const loadBusesRef = useRef(loadBuses);
-  const setLoadBuses = data => {
+  const setLoadBuses = (data) => {
     loadBusesRef.current = data;
     _setLoadBuses(data);
   };
 
   const [maxPower, setMaxPower] = useState(130);
-  var client;
+  let client;
 
   const handleLoadClicked = (i) => {
     const tmpLoads = loads;
@@ -77,9 +77,9 @@ const Dashboard = ({ data }) => {
   };
 
   const handleMsg = (topic, message) => {
-    let loads = loadsRef.current;
-    let generators = generatorsRef.current;
-    let loadBuses = loadBusesRef.current;
+    const loads = loadsRef.current;
+    const generators = generatorsRef.current;
+    const loadBuses = loadBusesRef.current;
     let msg = {};
     try {
       msg = JSON.parse(message.toString());
@@ -106,7 +106,8 @@ const Dashboard = ({ data }) => {
         const tmpLoads = loads;
         if (tmpLoads && tmpLoads[msg?.id]) {
           tmpLoads[msg?.id].status = (msg.state == 'true');
-          setLoads({...tmpLoads});
+          tmpLoads[msg?.id].latestPowerReading = msg.ValueLoad;
+          setLoads({ ...tmpLoads });
         }
       } else {
         const tmpLoads = loads;
@@ -124,7 +125,7 @@ const Dashboard = ({ data }) => {
             }
           });
         });
-        setLoads({...tmpLoads});
+        setLoads({ ...tmpLoads });
       }
     }
     if (topic === 'system-update') {
@@ -160,7 +161,7 @@ const Dashboard = ({ data }) => {
         setTotalProduced(accProducedPower);
       }
     }
-  }
+  };
   const addOnMessage = () => {
     if (client) {
       client.off('message', () => {
