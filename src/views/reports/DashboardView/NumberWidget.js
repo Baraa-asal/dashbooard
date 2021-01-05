@@ -32,7 +32,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const NumberWidget = ({
-  className, value, name, isChart, redTo, redFrom, yellowTo, yellowFrom, min, max, unit, ...rest
+  className, value, name, isChart, redTo, redFrom, yellowTo, yellowFrom, min, max, unit, chartWidth, numberOfCharts, values, labels, ...rest
 }) => {
   const classes = useStyles();
 
@@ -53,7 +53,9 @@ const NumberWidget = ({
               gutterBottom
               variant="h6"
             >
-              {name} ({unit || ""})
+              {name}
+              {' '}
+              {unit?.length ? `(${unit})` : ''}
             </Typography>
             {!isChart && (
             <Typography
@@ -65,8 +67,9 @@ const NumberWidget = ({
             )}
             {isChart && (
             <div>
+              {(!values?.length) && (
               <Chart
-                width={250}
+                width={parseInt(chartWidth) || 250}
                 height={140}
                 chartType="Gauge"
                 loader={<div>Loading Chart</div>}
@@ -75,16 +78,42 @@ const NumberWidget = ({
                   ['', parseFloat(parseFloat(value))],
                 ]}
                 options={{
-                  min: min,
-                  max: max,
-                  redFrom: redFrom,
-                  redTo: redTo,
-                  yellowFrom: yellowFrom,
-                  yellowTo: yellowTo,
+                  min,
+                  max,
+                  redFrom,
+                  redTo,
+                  yellowFrom,
+                  yellowTo,
                   minorTicks: 5
                 }}
                 rootProps={{ 'data-testid': '1' }}
               />
+              )}
+              {(values?.length > 0) && (
+                values.map((cvalue, index) => (
+                  <Chart
+                    width={parseInt(chartWidth) || 250}
+                    height={140}
+                    style={{ float: 'left' }}
+                    chartType="Gauge"
+                    loader={<div>Loading Chart</div>}
+                    data={[
+                      ['Label', 'Value'],
+                      [labels[index], parseFloat(parseFloat(cvalue))],
+                    ]}
+                    options={{
+                      min,
+                      max,
+                      redFrom,
+                      redTo,
+                      yellowFrom,
+                      yellowTo,
+                      minorTicks: 5
+                    }}
+                    rootProps={{ 'data-testid': '1' }}
+                  />
+                ))
+              )}
             </div>
             )}
           </Grid>

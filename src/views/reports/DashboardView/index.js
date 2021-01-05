@@ -254,7 +254,7 @@ const Dashboard = ({ data }) => {
             xl={3}
             xs={12}
           >
-            <NumberWidget name="Frequency" value={parseFloat(freq)} isChart unit="Hz" yellowFrom={58} yellowTo={58.5} redFrom={57} redTo={58} min={57} max={65} />
+            <NumberWidget  name="Frequency" value={parseFloat(freq)} isChart unit="Hz" yellowFrom={58} yellowTo={58.5} redFrom={57} redTo={58} min={57} max={65} />
           </Grid>
           <Grid
             item
@@ -263,7 +263,7 @@ const Dashboard = ({ data }) => {
             xl={3}
             xs={12}
           >
-            <NumberWidget name="Average Voltage" value={parseFloat(averageVoltage)} isChart unit="voltage" yellowFrom={240} yellowTo={270} redFrom={270} redTo={300} min={0} max={300} />
+            <NumberWidget chartWidth={88} numberofcharts values={[0.93,0.95 , 0.92]} labels={['Bus1', 'Bus2', 'Bus3']} name="Power factor" value={parseFloat(averageVoltage)} isChart unit="" yellowFrom={0.3} yellowTo={.7} redFrom={0} redTo={.3} min={0} max={1} />
           </Grid>
           <Grid
             item
