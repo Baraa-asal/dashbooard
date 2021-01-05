@@ -1,14 +1,20 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
+  Card,
+  CardContent,
   Container,
   Grid,
-  makeStyles
+  makeStyles, Typography
 } from '@material-ui/core';
+import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 import { subscribe } from 'mqtt-react';
 import mqtt from 'mqtt';
 import Page from 'src/components/Page';
 import Alert from '@material-ui/lab/Alert';
 import AlertTitle from '@material-ui/lab/AlertTitle';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import clsx from 'clsx';
 import { firestore } from '../../../firebase';
 import ListLoads from './ListLoads';
 import LoadDistribution from './LoadDistribution';
@@ -254,17 +260,9 @@ const Dashboard = ({ data }) => {
             xl={3}
             xs={12}
           >
-            <NumberWidget  name="Frequency" value={parseFloat(freq)} isChart unit="Hz" yellowFrom={58} yellowTo={58.5} redFrom={57} redTo={58} min={57} max={65} />
+            <NumberWidget name="Frequency" value={parseFloat(freq)} isChart unit="Hz" yellowFrom={58} yellowTo={58.5} redFrom={57} redTo={58} min={57} max={65} />
           </Grid>
-          <Grid
-            item
-            lg={3}
-            sm={6}
-            xl={3}
-            xs={12}
-          >
-            <NumberWidget chartWidth={88} numberofcharts values={[0.93,0.95 , 0.92]} labels={['Bus1', 'Bus2', 'Bus3']} name="Power factor" value={parseFloat(averageVoltage)} isChart unit="" yellowFrom={0.3} yellowTo={.7} redFrom={0} redTo={.3} min={0} max={1} />
-          </Grid>
+
           <Grid
             item
             lg={3}
@@ -282,6 +280,45 @@ const Dashboard = ({ data }) => {
             xs={12}
           >
             <NumberWidget name="Consumed Power" value={parseFloat(totalConsumption)} isChart unit="KW" yellowFrom={maxPower - 30} yellowTo={maxPower - 15} redFrom={maxPower - 15} redTo={maxPower} min={0} max={maxPower} />
+          </Grid>
+          <Grid
+            item
+            lg={3}
+            sm={6}
+            xl={3}
+            xs={12}
+          >
+            <Card>
+              <CardContent>
+                <Typography
+                  color="textSecondary"
+                  gutterBottom
+                  variant="h6"
+                >
+                  ESP32 Statuses
+                </Typography>
+                <List style={{ fontSize: '12px' }}>
+                  <ListItem>
+                    <FiberManualRecordIcon style={{ color: 'green' }} />
+                    {' '}
+                    <b>ESP-1 (Bus A):</b>
+                    <span>Online</span>
+                  </ListItem>
+                  <ListItem>
+                    <FiberManualRecordIcon style={{ color: 'green' }} />
+                    {' '}
+                    <b>ESP-2 (Bus B):</b>
+                    <span>Online</span>
+                  </ListItem>
+                  <ListItem>
+                    <FiberManualRecordIcon style={{ color: 'green' }} />
+                    {' '}
+                    <b>ESP-3 (Bus C):</b>
+                    <span>Online</span>
+                  </ListItem>
+                </List>
+              </CardContent>
+            </Card>
           </Grid>
           {
             ((errorMsg && errorMsg.length > 0)
