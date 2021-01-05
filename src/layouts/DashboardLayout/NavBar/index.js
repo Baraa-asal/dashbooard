@@ -112,13 +112,13 @@ const NavBar = ({ onMobileClose, openMobile }) => {
           color="textPrimary"
           variant="h5"
         >
-          {user.displayName}
+         Bara'a Ala'a Abu Asal
         </Typography>
         <Typography
           color="textSecondary"
           variant="body2"
         >
-          {user.jobTitle}
+          System engineer
         </Typography>
       </Box>
       <Divider />
