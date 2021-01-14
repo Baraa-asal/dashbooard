@@ -6,6 +6,7 @@ import {
   Grid,
   makeStyles, Typography
 } from '@material-ui/core';
+import moment from 'moment';
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 import { subscribe } from 'mqtt-react';
 import mqtt from 'mqtt';
@@ -37,11 +38,14 @@ const Dashboard = ({ data }) => {
   const initFreq = 59;
   const initAverageVoltage = 218;
   const classes = useStyles();
+  const [alertMsgs, setAlertMsgs] = React.useState([]);
   const [errorMsg, setErrorMsg] = React.useState('');
   const [warningMsg, setWarningMsg] = React.useState('');
   const [infoMsg, setInfoMsg] = React.useState('');
   const [totalConsumption, setTotalConsumption] = React.useState(0);
   const [totalProduced, setTotalProduced] = React.useState(100);
+  const [totalProducedNominal, setTotalProducedNominal] = React.useState(100);
+  const [microControllersStatus, setMicroControllerStatus] = React.useState([]);
   const [freq, setFreq] = React.useState(initFreq);
   const [mqttClient, setMqttClient] = React.useState(initFreq);
   const [averageVoltage, setAverageVoltage] = React.useState(initAverageVoltage);
@@ -94,25 +98,16 @@ const Dashboard = ({ data }) => {
     }
     console.log(topic, msg);
     if (topic === 'alerts') {
-      if (msg.hasOwnProperty('type')) {
-        if (msg.type === 'danger') {
-          setErrorMsg(msg.message);
-        }
-        if (msg.type === 'warning') {
-          setWarningMsg(msg.message);
-        }
-        if (msg.type === 'info') {
-          setInfoMsg(msg.message);
-        }
-      }
+      alertMsgs.push(msg);
+      setAlertMsgs([...alertMsgs]);
     }
     if (topic === 'loads-updates') {
-      console.log(loads);
       if (msg?.id) {
         const tmpLoads = loads;
         if (tmpLoads && tmpLoads[msg?.id]) {
           tmpLoads[msg?.id].status = (msg.state == 'true');
           tmpLoads[msg?.id].latestPowerReading = msg.ValueLoad;
+          tmpLoads[msg?.id].lastHB = new Date().getTime();
           setLoads({ ...tmpLoads });
         }
       } else {
@@ -178,11 +173,37 @@ const Dashboard = ({ data }) => {
 
   React.useEffect(() => {
     let acc = 0;
-    Object.keys(loads).map((load) => {
-      if (loads[load].status) {
-        acc += loads[load].nominalPower;
+    let acc2 = 0;
+    generators.map((generator) => {
+      acc2 += generator.PowerG;
+      if (generator.Gstate) {
+        acc += parseFloat(generator.PowerG);
       }
     });
+    setTotalProducedNominal(acc2);
+    setTotalProduced(acc);
+  }, [generators]);
+
+  React.useEffect(() => {
+    let acc = 0;
+    const controllersStatus = {
+      LoadA: { state: false, lastSeen: new Date().getTime() },
+      LoadB: { state: false, lastSeen: new Date().getTime() },
+      LoadC: { state: false, lastSeen: new Date().getTime() },
+    };
+    const time = new Date().getTime();
+    Object.keys(loads).map((load) => {
+      const loadObj = loads[load];
+      const duration = moment.duration(moment(new Date()).diff(loadObj.lastHB));
+      if (controllersStatus[loadObj.bus].lastSeen > duration.asSeconds()) {
+        controllersStatus[loadObj.bus].lastSeen = duration.asSeconds();
+        controllersStatus[loadObj.bus].state = (duration.asSeconds() < 180);
+      }
+      if (loads[load].status) {
+        acc += parseFloat(loads[load].latestPowerReading);
+      }
+    });
+    setMicroControllerStatus(controllersStatus);
     setTotalConsumption(acc);
   }, [loads]);
   React.useEffect(() => {
@@ -242,7 +263,11 @@ const Dashboard = ({ data }) => {
     client.subscribe(['loads-updates', 'system-update', 'alerts']);
     addOnMessage();
   }, []);
-
+  const closeAlertMsg = (index) => {
+    let tmpMsgs = alertMsgs;
+    tmpMsgs.splice(index, 1);
+    setAlertMsgs([...tmpMsgs]);
+  }
   return (
     <Page
       className={classes.root}
@@ -270,7 +295,7 @@ const Dashboard = ({ data }) => {
             xl={3}
             xs={12}
           >
-            <NumberWidget name="Produced Power" value={parseFloat(totalProduced)} isChart unit="MW" yellowFrom={maxPower - 30} yellowTo={maxPower - 15} redFrom={maxPower - 15} redTo={maxPower} min={0} max={maxPower} />
+            <NumberWidget name="Produced Power" value={parseFloat(totalProduced)} isChart unit="MW" yellowFrom={totalProducedNominal * 0.9} yellowTo={totalProducedNominal * 0.95} redFrom={totalProducedNominal * 0.95} redTo={totalProducedNominal * 1.1} min={0} max={Math.round(totalProducedNominal * 1.1)} />
           </Grid>
           <Grid
             item
@@ -279,7 +304,7 @@ const Dashboard = ({ data }) => {
             xl={3}
             xs={12}
           >
-            <NumberWidget name="Consumed Power" value={parseFloat(totalConsumption)} isChart unit="KW" yellowFrom={maxPower - 30} yellowTo={maxPower - 15} redFrom={maxPower - 15} redTo={maxPower} min={0} max={maxPower} />
+            <NumberWidget name="Consumed Power" value={parseFloat(totalConsumption)} isChart unit="KW" yellowFrom={totalProducedNominal * 0.9} yellowTo={totalProducedNominal * 0.95} redFrom={totalProducedNominal * 0.95} redTo={totalProducedNominal * 1.1} min={0} max={Math.round(totalProducedNominal * 1.1)} />
           </Grid>
           <Grid
             item
@@ -299,27 +324,44 @@ const Dashboard = ({ data }) => {
                 </Typography>
                 <List style={{ fontSize: '12px' }}>
                   <ListItem>
-                    <FiberManualRecordIcon style={{ color: 'green' }} />
+                    <FiberManualRecordIcon style={{ color: microControllersStatus.LoadA?.state ? 'green' : 'red' }} />
                     {' '}
                     <b>ESP-1 (Bus A):</b>
-                    <span>Online</span>
+                    <span>{microControllersStatus.LoadA?.state ? 'Online' : `Offline since ${moment.duration(microControllersStatus.LoadA?.lastSeen, 'seconds').humanize()}`}</span>
                   </ListItem>
                   <ListItem>
-                    <FiberManualRecordIcon style={{ color: 'green' }} />
+                    <FiberManualRecordIcon style={{ color: microControllersStatus.LoadC?.state ? 'green' : 'red' }} />
                     {' '}
                     <b>ESP-2 (Bus B):</b>
-                    <span>Online</span>
+                    <span>{microControllersStatus.LoadB?.state ? 'Online' : `Offline since ${moment.duration(microControllersStatus.LoadB?.lastSeen, 'seconds').humanize()}`}</span>
                   </ListItem>
                   <ListItem>
-                    <FiberManualRecordIcon style={{ color: 'green' }} />
+                    <FiberManualRecordIcon style={{ color: microControllersStatus.LoadC?.state ? 'green' : 'red' }} />
                     {' '}
                     <b>ESP-3 (Bus C):</b>
-                    <span>Online</span>
+                    <span>{microControllersStatus.LoadC?.state ? 'Online' : `Offline since ${moment.duration(microControllersStatus.LoadC?.lastSeen, 'seconds').humanize()}`}</span>
                   </ListItem>
                 </List>
               </CardContent>
             </Card>
           </Grid>
+          {alertMsgs?.length > 0 && (
+            alertMsgs.map((msg, index) => (
+              <Grid
+                key={`alert-msg-${index}`}
+                item
+                lg={12}
+                md={12}
+                xl={12}
+                xs={12}
+              >
+                <Alert onClose={() => { closeAlertMsg(index) }} variant={msg.type === 'danger' ? 'filled' : 'standard'} severity={msg.type === 'danger' ? 'error' : msg.type}>
+                  <AlertTitle>{msg.type}</AlertTitle>
+                  {msg.message}
+                </Alert>
+              </Grid>
+            ))
+          )}
           {
             ((errorMsg && errorMsg.length > 0)
               || (warningMsg && warningMsg.length > 0)

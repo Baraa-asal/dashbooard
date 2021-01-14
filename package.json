@@ -37,7 +37,7 @@
     "formik": "^2.1.5",
     "history": "^5.0.0",
     "lodash": "^4.17.19",
-    "moment": "^2.27.0",
+    "moment": "^2.29.1",
     "mqtt": "^4.2.6",
     "mqtt-react": "0.0.3",
     "mqtt-react-hooks": "^1.2.0",
